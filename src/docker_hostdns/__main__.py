@@ -11,7 +11,6 @@ import daemon
 
 p = argparse.ArgumentParser()
 p.add_argument('--domain', default="docker")
-p.add_argument('--docker-url', default="unix://var/run/docker.sock")
 p.add_argument('--dns-server', default='127.0.0.1', action="store", help="DNS server to send updates to")
 
 p.add_argument('--daemonize', '-d', action="store_true", default=False)
@@ -21,7 +20,7 @@ p.add_argument('--syslog', default=False, action="store_true")
 conf = p.parse_args()
 
 dns_updater = NamedUpdater(conf.domain, conf.dns_server)
-d = DockerDnsmasq(conf.docker_url, dns_updater)
+d = DockerDnsmasq(dns_updater)
 
 levels = [
     logging.ERROR,

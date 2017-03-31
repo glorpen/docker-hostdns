@@ -15,28 +15,14 @@ import dns.update
 import dns.query
 import dns.tsigkeyring
 from docker_hostdns.exceptions import ConnectionException
+import docker
 
 """
-import sys
-
-sys.exit()
-
 keyring = dns.tsigkeyring.from_text({
     'keyname.' : 'NjHwPsMKjdN++dOfE5iAiQ=='
 })
 
 #update = dns.update.Update('docker.', keyring=keyring)
-update = dns.update.Update('docker.')
-#update.replace('host', 300, 'A', "10.0.0.123")
-#update.add('host2', 300, 'A', "10.0.0.123")
-#update.delete('host2', 'A', "10.0.0.123")
-#update.add('_container', 0, 'TXT', "host")
-#update.add('_container', 0, 'TXT', "host2")
-#update.add('.', 0, 'TXT', "host=host2")
-
-response = dns.query.tcp(update, '127.0.0.1', timeout=10)
-
-sys.exit()
 """
 
 class NamedUpdater(object):
@@ -66,48 +52,106 @@ class NamedUpdater(object):
     def setup(self):
         self.load_records()
     
-    def add_host(self, host, ip):
+    def set_hosts(self, hosts):
+        current_hosts = []
+        for host, (ipv4, ipv6) in hosts.items():
+            current_hosts.append(host)
+            if host not in self.hosts:
+                self.add_host(host, ipv4, ipv6)
+        
+        for old_host in self.hosts.difference(current_hosts):
+            self.remove_host(old_host)
+    
+    def add_host(self, host, ipv4=None, ipv6=None):
+        self.logger.debug("Adding host %r", host)
         update = dns.update.Update('%s.' % self.domain)
         
-        update.add(host, 1, "A", ip)
-        update.add("*.%s" % host, 1, "A", ip)
+        if ipv4:
+            update.add(host, 1, "A", ipv4)
+            update.add("*.%s" % host, 1, "A", ipv4)
+        
+        if ipv6:
+            update.add(host, 1, "AAAA", ipv6)
+            update.add("*.%s" % host, 1, "AAAA", ipv6)
+        
         update.add("_container", 1, "TXT", host)
         
         response = dns.query.tcp(update, self.dns_server, timeout=2)
         #print(response)
     
     def remove_host(self, host):
+        self.logger.debug("Removing host %r", host)
         update = dns.update.Update('%s.' % self.domain)
         
         update.delete(host, 'A')
         update.delete("*.%s" % host, 'A')
+        
+        update.delete(host, 'AAAA')
+        update.delete("*.%s" % host, 'AAAA')
+        
         update.delete("_container", 'TXT', host)
         
         response = dns.query.tcp(update, self.dns_server, timeout=2)
         #print(response)
 
+class ContainerInfo(object):
+    ipv4 = None
+    ipv6 = None
+    id = None
+    name = None
+    
+    def __init__(self, **kwargs):
+        super(ContainerInfo, self).__init__()
+        
+        self.__dict__.update(kwargs)
+    
+    @classmethod
+    def from_container(cls, container):
+        d = container.attrs
+        
+        id_ = d["Id"]
+        name = d["Name"]
+        network_mode = d["HostConfig"]["NetworkMode"]
+        ipv4 = d["NetworkSettings"]["Networks"][network_mode]["IPAddress"] or None
+        ipv6 = d["NetworkSettings"]["Networks"][network_mode]["GlobalIPv6Address"] or None
+        name = d["Config"]["Labels"].get("pl.glorpen.hostname", name)
+        
+        return cls(id=id_, name=name, ipv4=ipv4, ipv6=ipv6)
+
 class DockerDnsmasq(object):
     
     client = None
     
-    def __init__(self, docker_url, dns_updater):
+    def __init__(self, dns_updater):
         super(DockerDnsmasq, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
-        
-        self.docker_url = docker_url
         
         self.dns_updater = dns_updater
         self._hosts_cache = {}
     
     def setup(self):
         try:
-            client = APIClient(base_url=self.docker_url)
+            client = docker.from_env()
+            #client = APIClient(base_url=self.docker_url)
             client.ping()
         except Exception:
-            raise ConnectionException('Error communicating with docker socket %r. Stopping.' % self.docker_url)
+            raise ConnectionException('Error communicating with docker. Stopping.')
         
-        self.logger.info("Connected to %r", self.docker_url)
+        self.logger.info("Connected to docker")
         self.client = client
+        
+        self.load_containers()
+    
+    def load_containers(self):
+        known_hosts = {}
+        
+        for container in self.client.containers.list(filters={"status":"running"}):
+            info = ContainerInfo.from_container(container)
+            
+            self._hosts_cache[info.id] = info.name
+            known_hosts[info.name] = (info.ipv4, info.ipv6)
+        
+        self.dns_updater.set_hosts(known_hosts)
     
     def on_disconnect(self, container_id):
         name = self._hosts_cache[container_id]
@@ -116,26 +160,27 @@ class DockerDnsmasq(object):
             
         self.dns_updater.remove_host(name)
     
-    def on_connect(self, name, ip, container_id):
-        name = name.replace('/', '').replace('_', '-')
-        self.logger.info("Adding new entry %r:%r for container %r", name, ip, container_id)
+    def on_connect(self, container_id, name, ipv4, ipv6):
+        self.logger.info("Adding new entry %r:[ipv4:%r, ipv6:%r] for container %r", name, ipv4, ipv6, container_id)
+        
+        cnt = list(self._hosts_cache.values()).count(name)
+        if cnt > 0:
+            old_name = name
+            name = "%s-%d" % (old_name, cnt)
+            self.logger.warning('Duplicated host %r, renamed to %r', old_name, name)
+        
         self._hosts_cache[container_id] = name
         
-        self.dns_updater.add_host(name, ip)
+        self.dns_updater.add_host(name, ipv4, ipv6)
         
     def handle_event(self, event):
         if event["Type"] == "network":
             if event["Action"] == "connect":
                 container_id = event["Actor"]["Attributes"]["container"]
                 self.logger.debug("Handling connect event for container %r", container_id)
-                d = self.client.inspect_container(container_id)
-                name = d["Name"]
-                network_mode = d["HostConfig"]["NetworkMode"]
-                ip = d["NetworkSettings"]["Networks"][network_mode]["IPAddress"]
-                
-                name = d["Config"]["Labels"].get("pl.glorpen.hostname", name)
-                
-                self.on_connect(name, ip, container_id)
+                info = ContainerInfo.from_container(self.client.containers.get(container_id))
+                self.on_connect(container_id, info.name, info.ipv4, info.ipv6)
+            
             if event["Action"] == "disconnect":
                 container_id = event["Actor"]["Attributes"]["container"]
                 self.logger.debug("Handling disconnect event for container %r", container_id)
