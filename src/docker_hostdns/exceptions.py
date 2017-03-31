@@ -1,7 +1,7 @@
 '''
 Created on 31.03.2017
 
-@author: glorpen
+@author: Arkadiusz Dzięgiel <arkadiusz.dziegiel@glorpen.pl>
 '''
 
 class AppException(Exception):

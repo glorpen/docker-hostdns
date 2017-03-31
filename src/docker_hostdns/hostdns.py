@@ -1,17 +1,17 @@
 '''
 Created on 29.03.2017
 
-@author: glorpen
+@author: Arkadiusz Dzięgiel <arkadiusz.dziegiel@glorpen.pl>
 '''
 
+import re
+import docker
 import logging
-import dns.update
 import dns.query
+import dns.update
 import dns.tsigkeyring
 from docker_hostdns.exceptions import ConnectionException, DnsException,\
     StopException
-import docker
-import re
 
 class NamedUpdater(object):
     
