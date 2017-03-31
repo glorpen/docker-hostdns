@@ -9,8 +9,9 @@ import logging
 import argparse
 from logging.handlers import SysLogHandler
 from docker_hostdns.hostdns import NamedUpdater, DockerHandler
-from docker_hostdns.exceptions import StopException
+from docker_hostdns.exceptions import StopException, ConfigException
 import docker_hostdns
+import os
 
 try:
     import daemon
@@ -21,18 +22,34 @@ except ImportError:
 def do_quit(*args):
     raise StopException()
 
+class PidWriter(object):
+    def __init__(self, pidpath):
+        super(PidWriter, self).__init__()
+        
+        self.pidpath = pidpath
+    
+    def __enter__(self):
+        if os.path.exists(self.pidpath):
+            raise ConfigException("Pid file %r alread exists" % self.pidpath)
+        
+        with open(self.pidpath, "wt") as f:
+            f.write("%d" % os.getpid())
+    
+    def __exit__(self, *args):
+        os.unlink(self.pidpath)
+
 def execute():
     p = argparse.ArgumentParser(description=docker_hostdns.__description__)
-    p.add_argument('--zone', default="docker", help="Dns zone to update, defaults to \"docker\"")
-    p.add_argument('--dns-server', default='127.0.0.1', action="store", help="Address of DNS server which will be updated, defaults to 127.0.0.1")
+    p.add_argument('--zone', default="docker", help="Dns zone to update, defaults to \"docker\".")
+    p.add_argument('--dns-server', default='127.0.0.1', action="store", help="Address of DNS server which will be updated, defaults to 127.0.0.1.")
     p.add_argument('--dns-key-secret', action="store", help="DNS Server key secret for use when updating zone. Use '-' to read from stdin.")
-    p.add_argument('--dns-key-name', action="store", help="DNS Server key name for use when updating zone")
+    p.add_argument('--dns-key-name', action="store", help="DNS Server key name for use when updating zone.")
     
     if _has_daemon:
-        p.add_argument('--daemonize', '-d', action="store_true", default=False, help="Daemonize after start")
+        p.add_argument('--daemonize', '-d', metavar="PIDFILE", action="store", default=None, help="Daemonize after start and store PID at given path.")
     
     p.add_argument('--verbose', '-v', default=0, action="count", help="Give more output. Option is additive, and can be used up to 3 times.")
-    p.add_argument('--syslog', default=False, action="store_true", help="Enable logging to syslog")
+    p.add_argument('--syslog', default=False, action="store_true", help="Enable logging to syslog.")
     
     conf = p.parse_args()
     
@@ -75,7 +92,8 @@ def execute():
         d.run()
     
     if _has_daemon and conf.daemonize:
-        with daemon.DaemonContext():
+        pid_writer = PidWriter(os.path.realpath(conf.daemonize))
+        with daemon.DaemonContext(pidfile=pid_writer):
             run()
     else:
         run()

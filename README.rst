@@ -12,24 +12,28 @@ Usage
 .. sourcecode::
 
    usage: docker-hostdns [-h] [--zone ZONE] [--dns-server DNS_SERVER]
-                         [--dns-key-secret DNS_KEY_SECRET]
-                         [--dns-key-name DNS_KEY_NAME] [--daemonize] [--verbose]
-                         [--syslog]
+                      [--dns-key-secret DNS_KEY_SECRET]
+                      [--dns-key-name DNS_KEY_NAME] [--daemonize PIDFILE]
+                      [--verbose] [--syslog]
+   
+   Update BIND nameserver zone with Docker hosts via DNS Updates.
    
    optional arguments:
      -h, --help            show this help message and exit
-     --zone ZONE           Dns zone to update
+     --zone ZONE           Dns zone to update, defaults to "docker".
      --dns-server DNS_SERVER
-                           Address of DNS server which will be updated
+                           Address of DNS server which will be updated, defaults
+                           to 127.0.0.1.
      --dns-key-secret DNS_KEY_SECRET
                            DNS Server key secret for use when updating zone. Use
                            '-' to read from stdin.
      --dns-key-name DNS_KEY_NAME
-                           DNS Server key name for use when updating zone
-     --daemonize, -d       Daemonize after start
+                           DNS Server key name for use when updating zone.
+     --daemonize PIDFILE, -d PIDFILE
+                           Daemonize after start and store PID at given path.
      --verbose, -v         Give more output. Option is additive, and can be used
                            up to 3 times.
-     --syslog              Log to syslog
+     --syslog              Enable logging to syslog.
 
 
 The ``--daemonize`` options is only available when you have installed ``python-daemon3`` package.
