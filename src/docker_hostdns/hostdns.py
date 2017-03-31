@@ -8,17 +8,10 @@ import logging
 import dns.update
 import dns.query
 import dns.tsigkeyring
-from docker_hostdns.exceptions import ConnectionException, DnsException
+from docker_hostdns.exceptions import ConnectionException, DnsException,\
+    StopException
 import docker
 import re
-
-"""
-keyring = dns.tsigkeyring.from_text({
-    'keyname.' : 'NjHwPsMKjdN++dOfE5iAiQ=='
-})
-
-#update = dns.update.Update('docker.', keyring=keyring)
-"""
 
 class NamedUpdater(object):
     
@@ -142,10 +135,9 @@ class DockerHandler(object):
     def setup(self):
         try:
             client = docker.from_env()
-            #client = APIClient(base_url=self.docker_url)
             client.ping()
         except Exception:
-            raise ConnectionException('Error communicating with docker. Stopping.')
+            raise ConnectionException('Error communicating with docker.')
         
         self.logger.info("Connected to docker")
         self.client = client
@@ -205,7 +197,11 @@ class DockerHandler(object):
         while True:
             try:
                 event = next(events)
+            except StopException:
+                self.logger.info("Exitting")
+                return
             except Exception:
                 self.logger.info("Docker connection broken - exitting")
                 return
+            
             self.handle_event(event)

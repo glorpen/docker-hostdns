@@ -15,3 +15,6 @@ class ConfigException(AppException):
 
 class DnsException(AppException):
     pass
+
+class StopException(AppException):
+    pass

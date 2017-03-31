@@ -9,6 +9,8 @@ import logging
 from logging.handlers import SysLogHandler
 from docker_hostdns.hostdns import NamedUpdater, DockerHandler
 import sys
+import signal
+from docker_hostdns.exceptions import StopException
 
 p = argparse.ArgumentParser()
 p.add_argument('--domain', default="docker")
@@ -31,7 +33,6 @@ if conf.dns_key_name and conf.dns_key_secret:
         secret = sys.stdin.readline().strip()
     
     keyring={conf.dns_key_name: secret}
-    print(keyring)
 
 dns_updater = NamedUpdater(conf.domain, conf.dns_server, keyring)
 d = DockerHandler(dns_updater)
@@ -56,8 +57,16 @@ logging.basicConfig(level=levels[min(conf.verbose, len(levels)-1)], handlers=han
 dns_updater.setup()
 d.setup()
 
+def do_quit(*args):
+    raise StopException()
+
+def run():
+    signal.signal(signal.SIGTERM, do_quit)
+    signal.signal(signal.SIGINT, do_quit)
+    d.run()
+
 if conf.daemonize:
     with daemon.DaemonContext():
-        d.run()
+        run()
 else:
-    d.run()
+    run()
