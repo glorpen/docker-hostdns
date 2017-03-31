@@ -53,4 +53,5 @@ setup(name=name,
           'suggested': suggested_require
       },
       install_requires=requires,
+      scripts = ["scripts/docker-hostdns"],
 )
