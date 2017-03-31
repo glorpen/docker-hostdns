@@ -4,10 +4,10 @@ Created on 31.03.2017
 @author: glorpen
 '''
 import argparse
-from docker_hostdns.hostdns import NamedUpdater, DockerDnsmasq
+import daemon
 import logging
 from logging.handlers import SysLogHandler
-import daemon
+from docker_hostdns.hostdns import NamedUpdater, DockerHandler
 
 p = argparse.ArgumentParser()
 p.add_argument('--domain', default="docker")
@@ -20,7 +20,7 @@ p.add_argument('--syslog', default=False, action="store_true")
 conf = p.parse_args()
 
 dns_updater = NamedUpdater(conf.domain, conf.dns_server)
-d = DockerDnsmasq(dns_updater)
+d = DockerHandler(dns_updater)
 
 levels = [
     logging.ERROR,

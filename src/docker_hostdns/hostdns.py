@@ -4,13 +4,7 @@ Created on 29.03.2017
 @author: glorpen
 '''
 
-from docker import APIClient
-import argparse
-import daemon
-import os
-from logging.handlers import SysLogHandler
 import logging
-
 import dns.update
 import dns.query
 import dns.tsigkeyring
@@ -118,12 +112,12 @@ class ContainerInfo(object):
         
         return cls(id=id_, name=name, ipv4=ipv4, ipv6=ipv6)
 
-class DockerDnsmasq(object):
+class DockerHandler(object):
     
     client = None
     
     def __init__(self, dns_updater):
-        super(DockerDnsmasq, self).__init__()
+        super(DockerHandler, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         
         self.dns_updater = dns_updater
