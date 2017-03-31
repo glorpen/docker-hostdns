@@ -10,6 +10,7 @@ import dns.query
 import dns.tsigkeyring
 from docker_hostdns.exceptions import ConnectionException
 import docker
+import re
 
 """
 keyring = dns.tsigkeyring.from_text({
@@ -94,6 +95,8 @@ class ContainerInfo(object):
     id = None
     name = None
     
+    re_name = re_chars = re.compile('[^a-zA-Z0-9_-]+')
+    
     def __init__(self, **kwargs):
         super(ContainerInfo, self).__init__()
         
@@ -109,6 +112,8 @@ class ContainerInfo(object):
         ipv4 = d["NetworkSettings"]["Networks"][network_mode]["IPAddress"] or None
         ipv6 = d["NetworkSettings"]["Networks"][network_mode]["GlobalIPv6Address"] or None
         name = d["Config"]["Labels"].get("pl.glorpen.hostname", name)
+        
+        name = cls.re_name.sub("-", name).strip("-")
         
         return cls(id=id_, name=name, ipv4=ipv4, ipv6=ipv6)
 
@@ -136,14 +141,24 @@ class DockerHandler(object):
         
         self.load_containers()
     
+    def _deduplicate_container_name(self, name):
+        cnt = list(self._hosts_cache.values()).count(name)
+        if cnt > 0:
+            old_name = name
+            name = "%s-%d" % (old_name, cnt)
+            self.logger.warning('Duplicated host %r, renamed to %r', old_name, name)
+        
+        return name
+    
     def load_containers(self):
         known_hosts = {}
         
         for container in self.client.containers.list(filters={"status":"running"}):
             info = ContainerInfo.from_container(container)
             
-            self._hosts_cache[info.id] = info.name
-            known_hosts[info.name] = (info.ipv4, info.ipv6)
+            unique_name = self._deduplicate_container_name(info.name)
+            self._hosts_cache[info.id] = unique_name
+            known_hosts[unique_name] = (info.ipv4, info.ipv6)
         
         self.dns_updater.set_hosts(known_hosts)
     
@@ -155,17 +170,10 @@ class DockerHandler(object):
         self.dns_updater.remove_host(name)
     
     def on_connect(self, container_id, name, ipv4, ipv6):
-        self.logger.info("Adding new entry %r:[ipv4:%r, ipv6:%r] for container %r", name, ipv4, ipv6, container_id)
-        
-        cnt = list(self._hosts_cache.values()).count(name)
-        if cnt > 0:
-            old_name = name
-            name = "%s-%d" % (old_name, cnt)
-            self.logger.warning('Duplicated host %r, renamed to %r', old_name, name)
-        
-        self._hosts_cache[container_id] = name
-        
-        self.dns_updater.add_host(name, ipv4, ipv6)
+        unique_name = self._deduplicate_container_name(name)
+        self.logger.info("Adding new entry %r:[ipv4:%r, ipv6:%r] for container %r", unique_name, ipv4, ipv6, container_id)
+        self._hosts_cache[container_id] = unique_name
+        self.dns_updater.add_host(unique_name, ipv4, ipv6)
         
     def handle_event(self, event):
         if event["Type"] == "network":
