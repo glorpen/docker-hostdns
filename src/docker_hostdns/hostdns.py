@@ -14,6 +14,7 @@ import logging
 import dns.update
 import dns.query
 import dns.tsigkeyring
+from docker_hostdns.exceptions import ConnectionException
 
 """
 import sys
@@ -37,15 +38,6 @@ response = dns.query.tcp(update, '127.0.0.1', timeout=10)
 
 sys.exit()
 """
-
-class AppException(Exception):
-    pass
-
-class ConnectionException(AppException):
-    pass
-
-class ConfigException(AppException):
-    pass
 
 class NamedUpdater(object):
     def __init__(self, domain, dns_server):
@@ -98,13 +90,13 @@ class DockerDnsmasq(object):
     
     client = None
     
-    def __init__(self, docker_url, dnsupdater):
+    def __init__(self, docker_url, dns_updater):
         super(DockerDnsmasq, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         
         self.docker_url = docker_url
         
-        self.dnsupdater = dnsupdater
+        self.dns_updater = dns_updater
         self._hosts_cache = {}
     
     def setup(self):
@@ -112,7 +104,7 @@ class DockerDnsmasq(object):
             client = APIClient(base_url=self.docker_url)
             client.ping()
         except Exception:
-            raise ConnectionException('Error communicating with docker socket %s. Stopping.', self.docker_url)
+            raise ConnectionException('Error communicating with docker socket %r. Stopping.' % self.docker_url)
         
         self.logger.info("Connected to %r", self.docker_url)
         self.client = client
@@ -122,13 +114,14 @@ class DockerDnsmasq(object):
         self.logger.info("Removing entry %r as container %r disconnected", name, container_id)
         del self._hosts_cache[container_id]
             
-        self.dnsupdater.remove_host(name)
+        self.dns_updater.remove_host(name)
     
     def on_connect(self, name, ip, container_id):
         name = name.replace('/', '').replace('_', '-')
         self.logger.info("Adding new entry %r:%r for container %r", name, ip, container_id)
         self._hosts_cache[container_id] = name
-        self.dnsupdater.add_host(name, ip)
+        
+        self.dns_updater.add_host(name, ip)
         
     def handle_event(self, event):
         if event["Type"] == "network":
@@ -158,44 +151,3 @@ class DockerDnsmasq(object):
                 self.logger.info("Docker connection broken - exitting")
                 return
             self.handle_event(event)
-
-if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument('--domain', default="docker")
-    p.add_argument('--docker-url', default="unix://var/run/docker.sock")
-    p.add_argument('--dns-server', default='127.0.0.1', action="store", help="DNS server to send updates to")
-    
-    p.add_argument('--daemonize', '-d', action="store_true", default=False)
-    p.add_argument('--verbose', '-v', default=0, action="count")
-    p.add_argument('--syslog', default=False, action="store_true")
-    
-    conf = p.parse_args()
-    
-    dnsmasq = NamedUpdater(conf.domain, conf.dns_server)
-    d = DockerDnsmasq(conf.docker_url, dnsupdater = dnsmasq)
-    
-    levels = [
-        logging.ERROR,
-        logging.WARNING,
-        logging.INFO,
-        logging.DEBUG
-    ]
-    
-    handlers = None
-    
-    if conf.syslog:
-        h = SysLogHandler(facility=SysLogHandler.LOG_DAEMON, address='/dev/log')
-        formatter = logging.Formatter(p.prog+' [%(name)s] %(message)s', '%b %e %H:%M:%S')
-        h.setFormatter(formatter)
-        handlers = [h]
-    
-    logging.basicConfig(level=levels[min(conf.verbose, len(levels)-1)], handlers=handlers)
-    
-    dnsmasq.setup()
-    d.setup()
-    
-    if conf.daemonize:
-        with daemon.DaemonContext():
-            d.run()
-    else:
-        d.run()
