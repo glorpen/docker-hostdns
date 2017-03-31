@@ -56,5 +56,9 @@ setup(name=name_human,
           'suggested': suggested_require
       },
       install_requires=requires,
-      scripts = ["scripts/%s" % name_human],
+      entry_points = {
+        "console_scripts": [
+            "docker-hostdns = docker_hostdns.console:execute",
+        ]
+      }
 )

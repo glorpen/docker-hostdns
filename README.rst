@@ -7,6 +7,8 @@ Update BIND nameserver zone with Docker hosts via DNS Updates.
 Usage
 =====
 
+*Docker HostDNS* can be run by ``docker-hostdns`` wrapper script or directly with ``python -m docker_hostdns``.
+
 .. sourcecode::
 
    usage: docker-hostdns [-h] [--zone ZONE] [--dns-server DNS_SERVER]
