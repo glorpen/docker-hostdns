@@ -17,18 +17,18 @@ class NamedUpdater(object):
     
     keyring = None
     
-    def __init__(self, domain, dns_server, keyring=None):
+    def __init__(self, zone, dns_server, keyring=None):
         super(NamedUpdater, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         
-        self.domain = domain
+        self.zone = zone
         self.dns_server = dns_server
         
         if keyring:
             self.keyring = dns.tsigkeyring.from_text(keyring)
     
     def load_records(self):
-        qname = dns.name.from_text("_container.%s" % self.domain)
+        qname = dns.name.from_text("_container.%s" % self.zone)
         q = dns.message.make_query(qname, dns.rdatatype.TXT)
         
         r = dns.query.udp(q, self.dns_server)
@@ -58,7 +58,7 @@ class NamedUpdater(object):
     
     def add_host(self, host, ipv4=None, ipv6=None):
         self.logger.debug("Adding host %r", host)
-        update = dns.update.Update('%s.' % self.domain, keyring=self.keyring)
+        update = dns.update.Update('%s.' % self.zone, keyring=self.keyring)
         
         if ipv4:
             update.add(host, 1, "A", ipv4)
@@ -81,7 +81,7 @@ class NamedUpdater(object):
     
     def remove_host(self, host):
         self.logger.debug("Removing host %r", host)
-        update = dns.update.Update('%s.' % self.domain, keyring=self.keyring)
+        update = dns.update.Update('%s.' % self.zone, keyring=self.keyring)
         
         update.delete(host, 'A')
         update.delete("*.%s" % host, 'A')

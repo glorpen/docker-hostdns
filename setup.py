@@ -13,7 +13,9 @@ name = "docker_hostdns"
 name_human = "docker-hostdns"
 
 with open("%s/src/%s/__init__.py" % (here, name), "rt") as f:
-    version = re.match(r'^__version__\s*=\s*"([^"]+).*$', f.read()).group(1)
+    data = f.read()
+    version = re.search(r'^__version__\s*=\s*"([^"]+)', data, re.MULTILINE).group(1)
+    description = re.search(r'^__description__\s*=\s*"([^"]+)', data, re.MULTILINE).group(1)
 
 requires = [
     'docker>=2.0.0',
@@ -28,7 +30,7 @@ tests_require = []
 
 setup(name=name_human,
       version = version,
-      description='Update BIND nameserver with Docker host names',
+      description=description,
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
           "Programming Language :: Python",
