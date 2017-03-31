@@ -9,7 +9,8 @@ with open(os.path.join(here, 'README.rst')) as f:
 with open(os.path.join(here, 'CHANGES.rst')) as f:
     CHANGES = f.read()
 
-name = 'docker_hostdns'
+name = "docker_hostdns"
+name_human = "docker-hostdns"
 
 with open("%s/src/%s/__init__.py" % (here, name), "rt") as f:
     version = re.match(r'^__version__\s*=\s*"([^"]+).*$', f.read()).group(1)
@@ -25,7 +26,7 @@ suggested_require = [
 dev_require = []
 tests_require = []
 
-setup(name=name,
+setup(name=name_human,
       version = version,
       description='Update BIND nameserver with Docker host names',
       long_description=README + '\n\n' + CHANGES,
@@ -41,7 +42,7 @@ setup(name=name,
       ],
       author='Arkadiusz Dzięgiel',
       author_email='arkadiusz.dziegiel@glorpen.pl',
-      url='https://github.com/glorpen/docker-hostdns',
+      url="https://github.com/glorpen/%s" % name_human,
       keywords='docker dns bind named',
       packages=find_packages("src"),
       package_dir = {'': 'src'},
@@ -53,5 +54,5 @@ setup(name=name,
           'suggested': suggested_require
       },
       install_requires=requires,
-      scripts = ["scripts/docker-hostdns"],
+      scripts = ["scripts/%s" % name_human],
 )
