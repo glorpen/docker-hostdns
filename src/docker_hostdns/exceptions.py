@@ -12,3 +12,6 @@ class ConnectionException(AppException):
 
 class ConfigException(AppException):
     pass
+
+class DnsException(AppException):
+    pass

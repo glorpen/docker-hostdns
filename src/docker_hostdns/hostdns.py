@@ -8,7 +8,7 @@ import logging
 import dns.update
 import dns.query
 import dns.tsigkeyring
-from docker_hostdns.exceptions import ConnectionException
+from docker_hostdns.exceptions import ConnectionException, DnsException
 import docker
 import re
 
@@ -21,12 +21,18 @@ keyring = dns.tsigkeyring.from_text({
 """
 
 class NamedUpdater(object):
-    def __init__(self, domain, dns_server):
+    
+    keyring = None
+    
+    def __init__(self, domain, dns_server, keyring=None):
         super(NamedUpdater, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         
         self.domain = domain
         self.dns_server = dns_server
+        
+        if keyring:
+            self.keyring = dns.tsigkeyring.from_text(keyring)
     
     def load_records(self):
         qname = dns.name.from_text("_container.%s" % self.domain)
@@ -59,7 +65,7 @@ class NamedUpdater(object):
     
     def add_host(self, host, ipv4=None, ipv6=None):
         self.logger.debug("Adding host %r", host)
-        update = dns.update.Update('%s.' % self.domain)
+        update = dns.update.Update('%s.' % self.domain, keyring=self.keyring)
         
         if ipv4:
             update.add(host, 1, "A", ipv4)
@@ -71,12 +77,18 @@ class NamedUpdater(object):
         
         update.add("_container", 1, "TXT", host)
         
+        self._update(update)
+    
+    def _update(self, update):
         response = dns.query.tcp(update, self.dns_server, timeout=2)
-        #print(response)
+        
+        rcode = response.rcode()
+        if rcode != dns.rcode.NOERROR:
+            raise DnsException("Adding host failed with %s" % dns.rcode.to_text(rcode))
     
     def remove_host(self, host):
         self.logger.debug("Removing host %r", host)
-        update = dns.update.Update('%s.' % self.domain)
+        update = dns.update.Update('%s.' % self.domain, keyring=self.keyring)
         
         update.delete(host, 'A')
         update.delete("*.%s" % host, 'A')
@@ -86,8 +98,7 @@ class NamedUpdater(object):
         
         update.delete("_container", 'TXT', host)
         
-        response = dns.query.tcp(update, self.dns_server, timeout=2)
-        #print(response)
+        self._update(update)
 
 class ContainerInfo(object):
     ipv4 = None

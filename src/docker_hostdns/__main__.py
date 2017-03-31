@@ -8,10 +8,13 @@ import daemon
 import logging
 from logging.handlers import SysLogHandler
 from docker_hostdns.hostdns import NamedUpdater, DockerHandler
+import sys
 
 p = argparse.ArgumentParser()
 p.add_argument('--domain', default="docker")
 p.add_argument('--dns-server', default='127.0.0.1', action="store", help="DNS server to send updates to")
+p.add_argument('--dns-key-secret', action="store", help="DNS Server key secret for use when updating zone. Use '-' to read from stdin.")
+p.add_argument('--dns-key-name', action="store", help="DNS Server key name for use when updating zone")
 
 p.add_argument('--daemonize', '-d', action="store_true", default=False)
 p.add_argument('--verbose', '-v', default=0, action="count")
@@ -19,7 +22,18 @@ p.add_argument('--syslog', default=False, action="store_true")
 
 conf = p.parse_args()
 
-dns_updater = NamedUpdater(conf.domain, conf.dns_server)
+keyring = None
+
+if conf.dns_key_name and conf.dns_key_secret:
+    secret = conf.dns_key_secret
+    
+    if secret == "-":
+        secret = sys.stdin.readline().strip()
+    
+    keyring={conf.dns_key_name: secret}
+    print(keyring)
+
+dns_updater = NamedUpdater(conf.domain, conf.dns_server, keyring)
 d = DockerHandler(dns_updater)
 
 levels = [
