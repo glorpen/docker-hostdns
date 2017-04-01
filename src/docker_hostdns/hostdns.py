@@ -175,6 +175,9 @@ class DockerHandler(object):
         self.dns_updater.set_hosts(known_hosts)
     
     def on_disconnect(self, container_id):
+        if container_id not in self._hosts_cache:
+            self.logger.debug("Disconnected container %r was not tracked, ignoring", container_id)
+            return
         name = self._hosts_cache[container_id]
         self.logger.info("Removing entry %r as container %r disconnected", name, container_id)
         del self._hosts_cache[container_id]
