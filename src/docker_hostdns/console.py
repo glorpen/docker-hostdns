@@ -63,9 +63,6 @@ def execute():
         
         keyring={conf.dns_key_name: secret}
     
-    dns_updater = NamedUpdater(conf.zone, conf.dns_server, keyring)
-    d = DockerHandler(dns_updater)
-    
     levels = [
         logging.ERROR,
         logging.WARNING,
@@ -83,13 +80,21 @@ def execute():
     
     logging.basicConfig(level=levels[min(conf.verbose, len(levels)-1)], handlers=handlers)
     
+    dns_updater = NamedUpdater(conf.zone, conf.dns_server, keyring)
+    d = DockerHandler(dns_updater)
+    
     dns_updater.setup()
     d.setup()
     
     def run():
         signal.signal(signal.SIGTERM, do_quit)
         signal.signal(signal.SIGINT, do_quit)
-        d.run()
+        logger = logging.getLogger('console')
+        try:
+            d.run()
+        except Exception as e:
+            logger.exception(e)
+            raise e
     
     if _has_daemon and conf.daemonize:
         pid_writer = PidWriter(os.path.realpath(conf.daemonize))
