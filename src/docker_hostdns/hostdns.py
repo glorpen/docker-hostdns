@@ -48,25 +48,27 @@ class NamedUpdater(object):
     
     def set_hosts(self, hosts):
         current_hosts = []
-        for host, (ipv4, ipv6) in hosts.items():
+        for host, (ipv4s, ipv6s) in hosts.items():
             current_hosts.append(host)
             if host not in self.hosts:
-                self.add_host(host, ipv4, ipv6)
+                self.add_host(host, ipv4s, ipv6s)
         
         for old_host in self.hosts.difference(current_hosts):
             self.remove_host(old_host)
     
-    def add_host(self, host, ipv4=None, ipv6=None):
+    def add_host(self, host, ipv4s=None, ipv6s=None):
         self.logger.debug("Adding host %r", host)
         update = dns.update.Update('%s.' % self.zone, keyring=self.keyring)
         
-        if ipv4:
-            update.add(host, 1, "A", ipv4)
-            update.add("*.%s" % host, 1, "A", ipv4)
+        if ipv4s:
+            for ipv4 in ipv4s:
+                update.add(host, 1, "A", ipv4)
+                update.add("*.%s" % host, 1, "A", ipv4)
         
-        if ipv6:
-            update.add(host, 1, "AAAA", ipv6)
-            update.add("*.%s" % host, 1, "AAAA", ipv6)
+        if ipv6s:
+            for ipv6 in ipv6s:
+                update.add(host, 1, "AAAA", ipv6)
+                update.add("*.%s" % host, 1, "AAAA", ipv6)
         
         update.add("_container", 1, "TXT", host)
         
@@ -94,12 +96,12 @@ class NamedUpdater(object):
         self._update(update)
 
 class ContainerInfo(object):
-    ipv4 = None
-    ipv6 = None
+    ipv4s = None
+    ipv6s = None
     id = None
     name = None
     
-    re_name = re_chars = re.compile('[^a-zA-Z0-9_-]+')
+    re_name = re_chars = re.compile('[^a-zA-Z0-9-]+')
     
     def __init__(self, **kwargs):
         super(ContainerInfo, self).__init__()
@@ -112,14 +114,21 @@ class ContainerInfo(object):
         
         id_ = d["Id"]
         name = d["Name"]
-        network_mode = d["HostConfig"]["NetworkMode"]
-        ipv4 = d["NetworkSettings"]["Networks"][network_mode]["IPAddress"] or None
-        ipv6 = d["NetworkSettings"]["Networks"][network_mode]["GlobalIPv6Address"] or None
+        
+        ipv4s = []
+        ipv6s = []
+        
+        for network in d["NetworkSettings"]["Networks"].values():
+            if network["IPAddress"]:
+                ipv4s.append(network["IPAddress"])
+            if network["GlobalIPv6Address"]:
+                ipv6s.append(network["GlobalIPv6Address"])
+        
         name = d["Config"]["Labels"].get("pl.glorpen.hostname", name)
         
         name = cls.re_name.sub("-", name).strip("-")
         
-        return cls(id=id_, name=name, ipv4=ipv4, ipv6=ipv6)
+        return cls(id=id_, name=name, ipv4s=ipv4s, ipv6s=ipv6s)
 
 class DockerHandler(object):
     
@@ -161,7 +170,7 @@ class DockerHandler(object):
             
             unique_name = self._deduplicate_container_name(info.name)
             self._hosts_cache[info.id] = unique_name
-            known_hosts[unique_name] = (info.ipv4, info.ipv6)
+            known_hosts[unique_name] = (info.ipv4s, info.ipv6s)
         
         self.dns_updater.set_hosts(known_hosts)
     
@@ -172,11 +181,11 @@ class DockerHandler(object):
             
         self.dns_updater.remove_host(name)
     
-    def on_connect(self, container_id, name, ipv4, ipv6):
+    def on_connect(self, container_id, name, ipv4s, ipv6s):
         unique_name = self._deduplicate_container_name(name)
-        self.logger.info("Adding new entry %r:[ipv4:%r, ipv6:%r] for container %r", unique_name, ipv4, ipv6, container_id)
+        self.logger.info("Adding new entry %r:{ipv4:%r, ipv6:%r} for container %r", unique_name, ipv4s, ipv6s, container_id)
         self._hosts_cache[container_id] = unique_name
-        self.dns_updater.add_host(unique_name, ipv4, ipv6)
+        self.dns_updater.add_host(unique_name, ipv4s, ipv6s)
         
     def handle_event(self, event):
         if event["Type"] == "network":
@@ -184,7 +193,7 @@ class DockerHandler(object):
                 container_id = event["Actor"]["Attributes"]["container"]
                 self.logger.debug("Handling connect event for container %r", container_id)
                 info = ContainerInfo.from_container(self.client.containers.get(container_id))
-                self.on_connect(container_id, info.name, info.ipv4, info.ipv6)
+                self.on_connect(container_id, info.name, info.ipv4s, info.ipv6s)
             
             if event["Action"] == "disconnect":
                 container_id = event["Actor"]["Attributes"]["container"]
