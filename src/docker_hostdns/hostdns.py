@@ -23,6 +23,7 @@ class NamedUpdater(object):
         
         self.zone = zone
         self.dns_server = dns_server
+        self.hosts = set()
         
         if keyring:
             self.keyring = dns.tsigkeyring.from_text(keyring)
@@ -73,6 +74,7 @@ class NamedUpdater(object):
         update.add("_container", 1, "TXT", host)
         
         self._update(update)
+        self.hosts.add(host)
     
     def _update(self, update):
         response = dns.query.tcp(update, self.dns_server, timeout=2)
@@ -94,6 +96,9 @@ class NamedUpdater(object):
         update.delete("_container", 'TXT', host)
         
         self._update(update)
+        
+        if host in self.hosts:
+            self.hosts.remove(host)
 
 class ContainerInfo(object):
     ipv4s = None
