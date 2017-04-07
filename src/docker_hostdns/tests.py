@@ -9,6 +9,14 @@ import dns
 import contextlib
 from docker_hostdns.exceptions import ConnectionException
 
+def _assert_called_once(mock):
+    if hasattr(mock, "assert_called_once"):
+        return mock.assert_called_once
+    else:
+        def _assert(*args, **kwargs):
+            assert mock.called
+    
+
 class NamedUpdaterTest(unittest.TestCase):
     
     hostname = "example-host"
@@ -50,7 +58,7 @@ class NamedUpdaterTest(unittest.TestCase):
             
             self.assertTrue(n.hosts.issubset([self.hostname]))
             
-            f.assert_called_once()
+            _assert_called_once(f)
             update = f.call_args[0][0]
             
             # check if update-set contains add commands
@@ -66,7 +74,7 @@ class NamedUpdaterTest(unittest.TestCase):
             n.remove_host(self.hostname)
             self.assertFalse(n.hosts)
             
-            f.assert_called_once()
+            _assert_called_once(f)
             update = f.call_args[0][0]
             
             # check if update-set contains removal commands
