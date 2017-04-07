@@ -61,17 +61,21 @@ class NamedUpdater(object):
         self.logger.debug("Adding host %r", host)
         update = dns.update.Update('%s.' % self.zone, keyring=self.keyring)
         
+        if ipv4s or ipv6s:
+            dns_name_single = dns.name.from_text("%s" % host)
+            dns_name_multi = dns.name.from_text("*.%s." % host)
+        
         if ipv4s:
             for ipv4 in ipv4s:
-                update.add(host, 1, "A", ipv4)
-                update.add("*.%s" % host, 1, "A", ipv4)
+                update.add(dns_name_single, 1, dns.rdatatype.A, ipv4)
+                update.add(dns_name_multi, 1, dns.rdatatype.A, ipv4)
         
         if ipv6s:
             for ipv6 in ipv6s:
-                update.add(host, 1, "AAAA", ipv6)
-                update.add("*.%s" % host, 1, "AAAA", ipv6)
+                update.add(dns_name_single, 1, dns.rdatatype.AAAA, ipv6)
+                update.add(dns_name_multi, 1, dns.rdatatype.AAAA, ipv6)
         
-        update.add("_container", 1, "TXT", host)
+        update.add(dns.name.from_text("_container"), 1, dns.rdatatype.TXT, host)
         
         self._update(update)
         self.hosts.add(host)
@@ -87,13 +91,16 @@ class NamedUpdater(object):
         self.logger.debug("Removing host %r", host)
         update = dns.update.Update('%s.' % self.zone, keyring=self.keyring)
         
-        update.delete(host, 'A')
-        update.delete("*.%s" % host, 'A')
+        dns_name_single = dns.name.from_text("%s" % host)
+        dns_name_multi = dns.name.from_text("*.%s." % host)
         
-        update.delete(host, 'AAAA')
-        update.delete("*.%s" % host, 'AAAA')
+        update.delete(dns_name_single, dns.rdatatype.A)
+        update.delete(dns_name_multi, dns.rdatatype.A)
         
-        update.delete("_container", 'TXT', host)
+        update.delete(dns_name_single, dns.rdatatype.AAAA)
+        update.delete(dns_name_multi, dns.rdatatype.AAAA)
+        
+        update.delete(dns.name.from_text("_container"), dns.rdatatype.TXT, host)
         
         self._update(update)
         

@@ -26,7 +26,7 @@ suggested_require = [
     "python-daemon"
 ]
 dev_require = []
-tests_require = []
+tests_require = ['unittest']
 
 setup(name=name_human,
       version = version,
@@ -60,5 +60,6 @@ setup(name=name_human,
         "console_scripts": [
             "docker-hostdns = docker_hostdns.console:execute",
         ]
-      }
+      },
+      test_suite="docker_hostdns.tests",
 )
