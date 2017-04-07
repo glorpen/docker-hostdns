@@ -16,6 +16,7 @@ from docker_hostdns.exceptions import ConnectionException, DnsException,\
 class NamedUpdater(object):
     
     keyring = None
+    _txt_record = "_container"
     
     def __init__(self, zone, dns_server, keyring=None):
         super(NamedUpdater, self).__init__()
@@ -25,18 +26,20 @@ class NamedUpdater(object):
         self.dns_server = dns_server
         self.hosts = set()
         
+        self._dns_zone = dns.name.from_text(self.zone)
+        self._dns_txt_record = dns.name.from_text(self._txt_record, self._dns_zone)
+        
         if keyring:
             self.keyring = dns.tsigkeyring.from_text(keyring)
     
     def load_records(self):
-        qname = dns.name.from_text("_container.%s" % self.zone)
-        q = dns.message.make_query(qname, dns.rdatatype.TXT)
+        q = dns.message.make_query(self._dns_txt_record, dns.rdatatype.TXT)
         
         r = dns.query.udp(q, self.dns_server)
         
         ret = []
         if r.answer:
-            ns_rrset = r.find_rrset(r.answer, qname, dns.rdataclass.IN, dns.rdatatype.TXT)
+            ns_rrset = r.find_rrset(r.answer, self._dns_txt_record, dns.rdataclass.IN, dns.rdatatype.TXT)
             
             for rr in ns_rrset:
                 for i in rr.strings:
@@ -59,11 +62,11 @@ class NamedUpdater(object):
     
     def add_host(self, host, ipv4s=None, ipv6s=None):
         self.logger.debug("Adding host %r", host)
-        update = dns.update.Update('%s.' % self.zone, keyring=self.keyring)
+        update = dns.update.Update(self._dns_zone, keyring=self.keyring)
         
         if ipv4s or ipv6s:
-            dns_name_single = dns.name.from_text("%s" % host)
-            dns_name_multi = dns.name.from_text("*.%s." % host)
+            dns_name_single = dns.name.from_text(host, self._dns_zone)
+            dns_name_multi = dns.name.from_text("*.%s" % host, self._dns_zone)
         
         if ipv4s:
             for ipv4 in ipv4s:
@@ -75,7 +78,7 @@ class NamedUpdater(object):
                 update.add(dns_name_single, 1, dns.rdatatype.AAAA, ipv6)
                 update.add(dns_name_multi, 1, dns.rdatatype.AAAA, ipv6)
         
-        update.add(dns.name.from_text("_container"), 1, dns.rdatatype.TXT, host)
+        update.add(self._dns_txt_record, 1, dns.rdatatype.TXT, host)
         
         self._update(update)
         self.hosts.add(host)
@@ -89,10 +92,10 @@ class NamedUpdater(object):
     
     def remove_host(self, host):
         self.logger.debug("Removing host %r", host)
-        update = dns.update.Update('%s.' % self.zone, keyring=self.keyring)
+        update = dns.update.Update(self._dns_zone, keyring=self.keyring)
         
-        dns_name_single = dns.name.from_text("%s" % host)
-        dns_name_multi = dns.name.from_text("*.%s." % host)
+        dns_name_single = dns.name.from_text(host, self._dns_zone)
+        dns_name_multi = dns.name.from_text("*.%s" % host, self._dns_zone)
         
         update.delete(dns_name_single, dns.rdatatype.A)
         update.delete(dns_name_multi, dns.rdatatype.A)
@@ -100,7 +103,7 @@ class NamedUpdater(object):
         update.delete(dns_name_single, dns.rdatatype.AAAA)
         update.delete(dns_name_multi, dns.rdatatype.AAAA)
         
-        update.delete(dns.name.from_text("_container"), dns.rdatatype.TXT, host)
+        update.delete(self._dns_txt_record, dns.rdatatype.TXT, host)
         
         self._update(update)
         

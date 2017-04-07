@@ -28,8 +28,10 @@ class NamedUpdaterTest(unittest.TestCase):
     def assert_dns_rrset(self, update, name, rtype, value, deleting=None):
         found = False
         
+        zone = update.question[0].name
+        
         for i in update.authority:
-            if i.match(dns.name.from_text(name), dns.rdataclass.IN, rtype, covers=dns.rdatatype.NONE, deleting=deleting):
+            if i.match(dns.name.from_text(name, zone), dns.rdataclass.IN, rtype, covers=dns.rdatatype.NONE, deleting=deleting):
                 found = (not i.items and value is None) or (i.items[0].to_text().strip('"') == value)
                 if found:
                     break
