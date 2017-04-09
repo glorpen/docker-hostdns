@@ -116,7 +116,7 @@ class ContainerInfo(object):
     id = None
     name = None
     
-    re_name = re_chars = re.compile('[^a-zA-Z0-9-]+')
+    re_name = re.compile('[^a-zA-Z0-9-.]+')
     
     def __init__(self, **kwargs):
         super(ContainerInfo, self).__init__()
