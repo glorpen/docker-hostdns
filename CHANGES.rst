@@ -1,3 +1,8 @@
+1.0.4
+=====
+
+- host names are now allowed to have dots in them
+
 1.0.3
 =====
 
