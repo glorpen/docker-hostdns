@@ -1,3 +1,8 @@
+1.1.0
+=====
+
+- possible breaking change: changed `dnspython3` package to just `dnspython` as Py3 is now supported
+
 1.0.4
 =====
 

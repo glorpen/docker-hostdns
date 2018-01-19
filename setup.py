@@ -19,7 +19,7 @@ with open("%s/src/%s/__init__.py" % (here, name), "rt") as f:
 
 requires = [
     'docker>=2.0.0',
-    'dnspython3'
+    'dnspython>=1.13.0'
 ]
 
 suggested_require = [
