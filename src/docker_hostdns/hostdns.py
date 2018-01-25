@@ -7,6 +7,7 @@ Created on 29.03.2017
 import re
 import docker
 import logging
+import socket
 import dns.query
 import dns.update
 import dns.tsigkeyring
@@ -16,7 +17,7 @@ from docker_hostdns.exceptions import ConnectionException, DnsException,\
 class NamedUpdater(object):
     
     keyring = None
-    _txt_record = "_container"
+    _txt_record = "_container_"
     
     def __init__(self, zone, dns_server, keyring=None):
         super(NamedUpdater, self).__init__()
@@ -27,7 +28,7 @@ class NamedUpdater(object):
         self.hosts = set()
         
         self._dns_zone = dns.name.from_text(self.zone)
-        self._dns_txt_record = dns.name.from_text(self._txt_record, self._dns_zone)
+        self._dns_txt_record = dns.name.from_text(self._txt_record + socket.gethostname(), self._dns_zone)
         
         if keyring:
             self.keyring = dns.tsigkeyring.from_text(keyring)
