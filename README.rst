@@ -29,7 +29,7 @@ Usage
                            '-' to read from stdin.
      --dns-key-name DNS_KEY_NAME
                            DNS Server key name for use when updating zone.
-     --name NAME           Name to differnate between multiple instances inside
+     --name NAME           Name to differentiate between multiple instances inside
                            same dns zone, defaults to current hostname.
      --daemonize PIDFILE, -d PIDFILE
                            Daemonize after start and store PID at given path.

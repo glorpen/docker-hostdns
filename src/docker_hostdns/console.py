@@ -44,7 +44,7 @@ def execute():
     p.add_argument('--dns-server', default='127.0.0.1', action="store", help="Address of DNS server which will be updated, defaults to 127.0.0.1.")
     p.add_argument('--dns-key-secret', action="store", help="DNS Server key secret for use when updating zone. Use '-' to read from stdin.")
     p.add_argument('--dns-key-name', action="store", help="DNS Server key name for use when updating zone.")
-    p.add_argument('--name', action="store", help="Name to differnate between multiple instances inside same dns zone, defaults to current hostname.")
+    p.add_argument('--name', action="store", help="Name to differentiate between multiple instances inside same dns zone, defaults to current hostname.")
     
     if _has_daemon:
         p.add_argument('--daemonize', '-d', metavar="PIDFILE", action="store", default=None, help="Daemonize after start and store PID at given path.")
