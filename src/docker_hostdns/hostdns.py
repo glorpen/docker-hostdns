@@ -22,9 +22,8 @@ def _as_str(s):
 class NamedUpdater(object):
     
     keyring = None
-    _txt_record = "_container_"
     
-    def __init__(self, zone, dns_server, keyring=None):
+    def __init__(self, zone, dns_server, keyring=None, instance_name=None):
         super(NamedUpdater, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         
@@ -33,7 +32,11 @@ class NamedUpdater(object):
         self.hosts = set()
         
         self._dns_zone = dns.name.from_text(self.zone)
-        self._dns_txt_record = dns.name.from_text(self._txt_record + socket.gethostname(), self._dns_zone)
+        
+        if not instance_name:
+            instance_name = socket.gethostname()
+        
+        self._dns_txt_record = dns.name.from_text("_container_%s" % instance_name, self._dns_zone)
         
         if keyring:
             self.keyring = dns.tsigkeyring.from_text(keyring)

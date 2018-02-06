@@ -8,6 +8,7 @@ from docker_hostdns.hostdns import NamedUpdater, ContainerInfo, DockerHandler
 import dns
 import contextlib
 from docker_hostdns.exceptions import ConnectionException
+import socket
 
 def _assert_called_once(mock):
     if hasattr(mock, "assert_called_once"):
@@ -47,7 +48,7 @@ class NamedUpdaterTest(unittest.TestCase):
         self.assertTrue(found, "%r %s dns record with value %r exists" % (name, dns.rdatatype.to_text(rtype), value))
     
     def create_obj(self):
-        return NamedUpdater("example-zone", "example-dns")
+        return NamedUpdater("example-zone", "example-dns", instance_name="test")
     
     def test_host_add(self):
         n = self.create_obj()
@@ -62,7 +63,7 @@ class NamedUpdaterTest(unittest.TestCase):
             update = f.call_args[0][0]
             
             # check if update-set contains add commands
-            self.assert_dns_rrset(update, "_container", dns.rdatatype.TXT, self.hostname)
+            self.assert_dns_rrset(update, "_container_test", dns.rdatatype.TXT, self.hostname)
             self.assert_dns_rrset(update, self.hostname, dns.rdatatype.A, self.host4_a)
             self.assert_dns_rrset(update, self.hostname, dns.rdatatype.A, self.host4_b)
             self.assert_dns_rrset(update, self.hostname, dns.rdatatype.AAAA, self.host6)
@@ -78,7 +79,7 @@ class NamedUpdaterTest(unittest.TestCase):
             update = f.call_args[0][0]
             
             # check if update-set contains removal commands
-            self.assert_dns_rrset(update, "_container", dns.rdatatype.TXT, self.hostname, deleting=dns.rdataclass.NONE)
+            self.assert_dns_rrset(update, "_container_test", dns.rdatatype.TXT, self.hostname, deleting=dns.rdataclass.NONE)
             self.assert_dns_rrset(update, self.hostname, dns.rdatatype.A, None, deleting=dns.rdataclass.ANY)
             self.assert_dns_rrset(update, "*.%s" % self.hostname, dns.rdatatype.A, None, deleting=dns.rdataclass.ANY)
             self.assert_dns_rrset(update, self.hostname, dns.rdatatype.AAAA, None, deleting=dns.rdataclass.ANY)
