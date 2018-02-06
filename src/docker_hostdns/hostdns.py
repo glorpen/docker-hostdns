@@ -13,6 +13,11 @@ import dns.tsigkeyring
 from docker_hostdns.exceptions import ConnectionException, DnsException,\
     StopException
 
+def _as_str(s):
+    if isinstance(s, bytes):
+        return s.decode()
+    return s
+
 class NamedUpdater(object):
     
     keyring = None
@@ -43,7 +48,7 @@ class NamedUpdater(object):
             
             for rr in ns_rrset:
                 for i in rr.strings:
-                    ret.append(i)
+                    ret.append(_as_str(i))
     
         self.hosts = set(ret)
         
@@ -169,6 +174,7 @@ class DockerHandler(object):
         self.load_containers()
     
     def _deduplicate_container_name(self, name):
+        name = _as_str(name)
         cnt = list(self._hosts_cache.values()).count(name)
         if cnt > 0:
             old_name = name
