@@ -1,3 +1,10 @@
+1.1.1
+=====
+
+- it is now possible to run multiple instances in single dns zone
+  `#2 <https://github.com/glorpen/docker-hostdns/pull/2>`__ (`dvenza <https://github.com/dvenza>`__)
+- added option to override default instance name for use in txt records
+
 1.1.0
 =====
 
