@@ -103,4 +103,4 @@ To secure secret key (the ``dns-key-secret`` option) you can:
 - passing its contents to env var ``DNS_KEY_SECRET``
 - setting env var ``DNS_KEY_SECRET_FILE`` to path of file with secret as its content
 
-And then running docker-hostdns app with ``--dns-key-secret -`` option.
+Option ``--dns-key-secret -`` will be then automatically prepended and secret key piped to docker-hostdns process.
