@@ -11,7 +11,7 @@ has_key_file(){
 	return $?
 }
 has_key_env(){
-	test ${DNS_KEY_SECRET+x} == "x"
+	test "${DNS_KEY_SECRET+x}" == "x"
 	return $?
 }
 
