@@ -38,9 +38,12 @@ class PidWriter(object):
     def __exit__(self, *args):
         os.unlink(self.pidpath)
 
-def execute():
+def execute(argv = None):
+    if argv is None:
+        argv = sys.argv
+    
     p = argparse.ArgumentParser(
-        prog="docker-hostdns" if sys.argv[0].endswith(".py") else None,
+        prog="docker-hostdns" if argv[0].endswith(".py") else os.path.basename(argv[0]),
         description=docker_hostdns.__description__
     )
     p.add_argument('--zone', default="docker", help="Dns zone to update, defaults to \"docker\".")
@@ -55,8 +58,9 @@ def execute():
     
     p.add_argument('--verbose', '-v', default=0, action="count", help="Give more output. Option is additive, and can be used up to 3 times.")
     p.add_argument('--syslog', default=False, action="store_true", help="Enable logging to syslog.")
+    p.add_argument('--clear-on-exit', default=False, action="store_true", help="Clear zone on exit.")
     
-    conf = p.parse_args()
+    conf = p.parse_args(args=argv[1:])
     
     keyring = None
     
@@ -100,6 +104,9 @@ def execute():
         except Exception as e:
             logger.exception(e)
             raise e
+        
+        if conf.clear_on_exit:
+            dns_updater.set_hosts({})
     
     if _has_daemon and conf.daemonize:
         pid_writer = PidWriter(os.path.realpath(conf.daemonize))

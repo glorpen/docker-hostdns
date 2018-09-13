@@ -66,8 +66,9 @@ class NamedUpdater(object):
             if host not in self.hosts:
                 self.add_host(host, ipv4s, ipv6s)
         
-        for old_host in self.hosts.difference(current_hosts):
-            self.remove_host(old_host)
+        old_hosts = self.hosts.difference(current_hosts)
+        if old_hosts:
+            self.remove_host(old_hosts)
     
     def add_host(self, names, ipv4s=None, ipv6s=None):
         """
