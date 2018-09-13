@@ -39,7 +39,10 @@ class PidWriter(object):
         os.unlink(self.pidpath)
 
 def execute():
-    p = argparse.ArgumentParser(description=docker_hostdns.__description__)
+    p = argparse.ArgumentParser(
+        prog="docker-hostdns" if sys.argv[0].endswith(".py") else None,
+        description=docker_hostdns.__description__
+    )
     p.add_argument('--zone', default="docker", help="Dns zone to update, defaults to \"docker\".")
     p.add_argument('--dns-server', default='127.0.0.1', action="store", help="Address of DNS server which will be updated, defaults to 127.0.0.1.")
     p.add_argument('--dns-key-secret', action="store", help="DNS Server key secret for use when updating zone. Use '-' to read from stdin.")
