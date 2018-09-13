@@ -86,3 +86,21 @@ Custom host names
 *****************
 
 You can set custom host name by using container label ``pl.glorpen.hostname``, its content will be used as container name.
+
+Docker Image
+============
+
+Docker image is available at ``glorpen/hostdns``.
+For help try ``docker run --rm -it glorpen/hostdns:latest --help``.
+
+Remember to mount ``/run/docker.sock`` inside container.
+
+Securing DNS secret key
+***********************
+
+To secure secret key (the ``dns-key-secret`` option) you can:
+
+- passing its contents to env var ``DNS_KEY_SECRET``
+- setting env var ``DNS_KEY_SECRET_FILE`` to path of file with secret as its content
+
+And then running docker-hostdns app with ``--dns-key-secret -`` option.
