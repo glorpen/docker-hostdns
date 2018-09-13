@@ -1,3 +1,9 @@
+2.1.0
+=====
+
+- fixed docker entrypoint exit signal handling
+- added clean-on-exit option to clear used dns zone
+
 2.0.0
 =====
 
