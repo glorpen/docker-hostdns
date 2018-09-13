@@ -2,7 +2,7 @@ FROM python:3.6.6-alpine
 
 LABEL maintainer="Arkadiusz Dzięgiel <arkadiusz.dziegiel@glorpen.pl>"
 
-ADD docker/entrypoint.sh /usr/local/bin/docker-entrypoint
+ADD docker/entrypoint.py /usr/local/bin/docker-entrypoint
 
 ARG HOSTDNS_VERSION=
 
