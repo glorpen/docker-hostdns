@@ -15,30 +15,31 @@ Usage
                          [--dns-key-secret DNS_KEY_SECRET]
                          [--dns-key-name DNS_KEY_NAME] [--name NAME]
                          [--network NETWORK] [--daemonize PIDFILE] [--verbose]
-                         [--syslog]
+                         [--syslog] [--clear-on-exit]
    
    Update BIND nameserver zone with Docker hosts via DNS Updates.
    
    optional arguments:
      -h, --help            show this help message and exit
-     --zone ZONE           Dns zone to update, defaults to "docker".
+     --zone ZONE           dns zone to update, defaults to "docker"
      --dns-server DNS_SERVER
-                           Address of DNS server which will be updated, defaults
-                           to 127.0.0.1.
+                           address of DNS server which will be updated, defaults
+                           to 127.0.0.1
      --dns-key-secret DNS_KEY_SECRET
-                           DNS Server key secret for use when updating zone. Use
-                           '-' to read from stdin.
+                           DNS Server key secret for use when updating zone, use
+                           '-' to read from stdin
      --dns-key-name DNS_KEY_NAME
-                           DNS Server key name for use when updating zone.
-     --name NAME           Name to differentiate between multiple instances
-                           inside same dns zone, defaults to current hostname.
-     --network NETWORK     Network to fetch container names from, defaults to
-                           docker default bridge. Can be used multiple times.
+                           DNS Server key name for use when updating zone
+     --name NAME           name to differentiate between multiple instances
+                           inside same dns zone, defaults to current hostname
+     --network NETWORK     network to fetch container names from, defaults to
+                           docker default bridge, can be used multiple times
      --daemonize PIDFILE, -d PIDFILE
-                           Daemonize after start and store PID at given path.
-     --verbose, -v         Give more output. Option is additive, and can be used
-                           up to 3 times.
-     --syslog              Enable logging to syslog.
+                           daemonize after start and store PID at given path
+     --verbose, -v         give more output - option is additive, and can be used
+                           up to 3 times
+     --syslog              enable logging to syslog
+     --clear-on-exit       clear zone on exit
 
 
 The ``--daemonize`` options is only available when you have installed ``python-daemon3`` package.

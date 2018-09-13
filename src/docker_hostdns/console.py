@@ -46,19 +46,19 @@ def execute(argv = None):
         prog="docker-hostdns" if argv[0].endswith(".py") else os.path.basename(argv[0]),
         description=docker_hostdns.__description__
     )
-    p.add_argument('--zone', default="docker", help="Dns zone to update, defaults to \"docker\".")
-    p.add_argument('--dns-server', default='127.0.0.1', action="store", help="Address of DNS server which will be updated, defaults to 127.0.0.1.")
-    p.add_argument('--dns-key-secret', action="store", help="DNS Server key secret for use when updating zone. Use '-' to read from stdin.")
-    p.add_argument('--dns-key-name', action="store", help="DNS Server key name for use when updating zone.")
-    p.add_argument('--name', action="store", help="Name to differentiate between multiple instances inside same dns zone, defaults to current hostname.")
-    p.add_argument('--network', default=None, action="append", help="Network to fetch container names from, defaults to docker default bridge. Can be used multiple times.")
+    p.add_argument('--zone', default="docker", help="dns zone to update, defaults to \"docker\"")
+    p.add_argument('--dns-server', default='127.0.0.1', action="store", help="address of DNS server which will be updated, defaults to 127.0.0.1")
+    p.add_argument('--dns-key-secret', action="store", help="DNS Server key secret for use when updating zone, use '-' to read from stdin")
+    p.add_argument('--dns-key-name', action="store", help="DNS Server key name for use when updating zone")
+    p.add_argument('--name', action="store", help="name to differentiate between multiple instances inside same dns zone, defaults to current hostname")
+    p.add_argument('--network', default=None, action="append", help="network to fetch container names from, defaults to docker default bridge, can be used multiple times")
     
     if _has_daemon:
-        p.add_argument('--daemonize', '-d', metavar="PIDFILE", action="store", default=None, help="Daemonize after start and store PID at given path.")
+        p.add_argument('--daemonize', '-d', metavar="PIDFILE", action="store", default=None, help="daemonize after start and store PID at given path")
     
-    p.add_argument('--verbose', '-v', default=0, action="count", help="Give more output. Option is additive, and can be used up to 3 times.")
-    p.add_argument('--syslog', default=False, action="store_true", help="Enable logging to syslog.")
-    p.add_argument('--clear-on-exit', default=False, action="store_true", help="Clear zone on exit.")
+    p.add_argument('--verbose', '-v', default=0, action="count", help="give more output - option is additive, and can be used up to 3 times")
+    p.add_argument('--syslog', default=False, action="store_true", help="enable logging to syslog")
+    p.add_argument('--clear-on-exit', default=False, action="store_true", help="clear zone on exit")
     
     conf = p.parse_args(args=argv[1:])
     
