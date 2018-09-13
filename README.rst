@@ -12,9 +12,10 @@ Usage
 .. sourcecode::
 
    usage: docker-hostdns [-h] [--zone ZONE] [--dns-server DNS_SERVER]
-                      [--dns-key-secret DNS_KEY_SECRET]
-                      [--dns-key-name DNS_KEY_NAME] [--daemonize PIDFILE]
-                      [--verbose] [--syslog]
+                         [--dns-key-secret DNS_KEY_SECRET]
+                         [--dns-key-name DNS_KEY_NAME] [--name NAME]
+                         [--network NETWORK] [--daemonize PIDFILE] [--verbose]
+                         [--syslog]
    
    Update BIND nameserver zone with Docker hosts via DNS Updates.
    
@@ -29,8 +30,10 @@ Usage
                            '-' to read from stdin.
      --dns-key-name DNS_KEY_NAME
                            DNS Server key name for use when updating zone.
-     --name NAME           Name to differentiate between multiple instances inside
-                           same dns zone, defaults to current hostname.
+     --name NAME           Name to differentiate between multiple instances
+                           inside same dns zone, defaults to current hostname.
+     --network NETWORK     Network to fetch container names from, defaults to
+                           docker default bridge. Can be used multiple times.
      --daemonize PIDFILE, -d PIDFILE
                            Daemonize after start and store PID at given path.
      --verbose, -v         Give more output. Option is additive, and can be used
