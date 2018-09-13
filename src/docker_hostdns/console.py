@@ -45,6 +45,7 @@ def execute():
     p.add_argument('--dns-key-secret', action="store", help="DNS Server key secret for use when updating zone. Use '-' to read from stdin.")
     p.add_argument('--dns-key-name', action="store", help="DNS Server key name for use when updating zone.")
     p.add_argument('--name', action="store", help="Name to differentiate between multiple instances inside same dns zone, defaults to current hostname.")
+    p.add_argument('--network', default=None, action="append", help="Network to fetch container names from, defaults to docker default bridge. Can be used multiple times.")
     
     if _has_daemon:
         p.add_argument('--daemonize', '-d', metavar="PIDFILE", action="store", default=None, help="Daemonize after start and store PID at given path.")
@@ -85,7 +86,7 @@ def execute():
     d = DockerHandler(dns_updater)
     
     dns_updater.setup()
-    d.setup()
+    d.setup(conf.network)
     
     def run():
         signal.signal(signal.SIGTERM, do_quit)
