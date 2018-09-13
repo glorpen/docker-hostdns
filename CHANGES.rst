@@ -1,3 +1,12 @@
+2.0.0
+=====
+
+- added Docker image
+- watched network interfaces can be now specified by user
+- container name deduplication now only drops duplicate names
+- single container can have multiple aliases
+- short id and other container aliases are now available as dns names
+
 1.1.1
 =====
 
