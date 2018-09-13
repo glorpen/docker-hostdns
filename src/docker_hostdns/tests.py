@@ -108,6 +108,7 @@ class NamedUpdaterTest(unittest.TestCase):
 class ContainerInfoTest(unittest.TestCase):
     
     test_id = "some-id"
+    networks = ["example-network"]
     
     def create_container(self, id_, name, networks={}, label_name=None):
         m = unittest.mock.Mock()
@@ -126,7 +127,8 @@ class ContainerInfoTest(unittest.TestCase):
         for name, v in networks.items():
             m.attrs["NetworkSettings"]["Networks"][name] = {
                 "IPAddress": v[0],
-                "GlobalIPv6Address": v[1]
+                "GlobalIPv6Address": v[1],
+                "Aliases": []
             }
         if label_name:
             m.attrs["Config"]["Labels"]["pl.glorpen.hostname"] = label_name
@@ -135,26 +137,26 @@ class ContainerInfoTest(unittest.TestCase):
     
     def test_getter_without_networks(self):
         m = self.create_container(self.test_id, "/some_test__")
-        c = ContainerInfo.from_container(m)
+        c = ContainerInfo.from_container(m, self.networks)
         self.assertEqual(c.id, self.test_id)
-        self.assertEqual(c.name, "some-test")
+        self.assertEqual(sorted(c.names), [self.test_id, "some-test"])
         self.assertEqual(c.ipv4s, [])
         self.assertEqual(c.ipv6s, [])
     
     def test_label(self):
         m = self.create_container(self.test_id, self.test_id, label_name="name_from_label")
-        c = ContainerInfo.from_container(m)
-        self.assertEqual(c.name, "name-from-label")
+        c = ContainerInfo.from_container(m, self.networks)
+        self.assertEqual(c.names, {"name-from-label"})
     
-    def test_networks(self):
+    def test_multiple_networks(self):
         m = self.create_container(
             self.test_id,
             self.test_id,
             networks={"a":["ipv4.1","ipv6.1"],"b":["ipv4.2", None], "c":[None, "ipv6.2"]}
         )
-        c = ContainerInfo.from_container(m)
+        c = ContainerInfo.from_container(m, ["a", "b"])
         self.assertEqual(sorted(c.ipv4s), ["ipv4.1", "ipv4.2"])
-        self.assertEqual(sorted(c.ipv6s), ["ipv6.1", "ipv6.2"])
+        self.assertEqual(sorted(c.ipv6s), ["ipv6.1"], msg="No 'c' network")
 
 class DockerHandlerTest(unittest.TestCase):
     def get_object(self):
@@ -188,14 +190,14 @@ class DockerHandlerTest(unittest.TestCase):
             client.containers.list.return_value = [
                 ["idA", "a", ["ipv4"], ["ipv6"]],
                 ["idB", "b", ["ipv4"], []],
-                ["idC", "a", [], []],
+                ["idC", "a", ["ipv4"], []],
             ]
             with self.mock_container_info_factory() as info:
-                info.side_effect = lambda c: ContainerInfo(id=c[0],name=c[1], ipv4s=c[2], ipv6s=c[3])
+                info.side_effect = lambda c, networks: ContainerInfo(id=c[0], names=[c[1]], ipv4s=c[2], ipv6s=c[3])
                 d.setup()
         
-        # second "a" should be renamed to a-1
-        updater.set_hosts.assert_called_once_with({'b': (['ipv4'], []), 'a-1': ([], []), 'a': (['ipv4'], ['ipv6'])})
+        # second "a" should be dropped
+        updater.set_hosts.assert_called_once_with({'b': (['ipv4'], []), 'a': (['ipv4'], ['ipv6'])})
     
     def test_connection_events_handlers(self):
         d, updater = self.get_object()
@@ -203,10 +205,10 @@ class DockerHandlerTest(unittest.TestCase):
         d.on_disconnect("unknown-id")
         updater.remove_host.assert_not_called()
         
-        d.on_connect("known-id", "name", ["ipv4"],["ipv6"])
-        updater.add_host.assert_called_once_with("name", ["ipv4"], ["ipv6"])
+        d.on_connect("known-id", ["name"], ["ipv4"],["ipv6"])
+        updater.add_host.assert_called_once_with(("name",), ["ipv4"], ["ipv6"])
         d.on_disconnect("known-id")
-        updater.remove_host.assert_called_once_with("name")
+        updater.remove_host.assert_called_once_with(("name",))
     
     def test_connection_events_dispatcher(self):
         with unittest.mock.patch.object(DockerHandler, 'on_connect') as on_connect:
@@ -216,23 +218,23 @@ class DockerHandlerTest(unittest.TestCase):
                 with self.mock_container_info_factory() as info:
                     with self.mock_docker_client() as client:
                         
-                        d.setup()
+                        d.setup(["test-network"])
                         
-                        c = ContainerInfo(id="container-1", name="c-1")
+                        c = ContainerInfo(id="container-1", names={"c-1"})
                         info.return_value = c
                         
                         d.handle_event({
                             "Type": "network",
                             "Action": "connect",
-                            "Actor":{"Attributes":{"container":"test-id"}}
+                            "Actor":{"Attributes":{"container":"test-id", "name": "test-network"}}
                         })
                         
-                        on_connect.assert_called_once_with("test-id", "c-1", None, None)
+                        on_connect.assert_called_once_with("test-id", {"c-1"}, None, None)
                         
                         d.handle_event({
                             "Type": "network",
                             "Action": "disconnect",
-                            "Actor":{"Attributes":{"container":"test-id"}}
+                            "Actor":{"Attributes":{"container":"test-id", "name": "test-network"}}
                         })
                         
                         on_disconnect.assert_called_once_with("test-id")
