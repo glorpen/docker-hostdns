@@ -112,12 +112,12 @@ Option ``--dns-key-secret -`` will be then automatically prepended and secret ke
 Working with docker-compose
 ===========================
 
-When using **docker-compose** for development you can create custom docker network and use it as
+When using *docker-compose* for development you can create custom docker network and use it as
 domain names source.
 
-To do this, create docker network, eg.: ``docker network create dns`` 
+To do this, create docker network with ``docker network create example-dns`` and then run *Docker HostDNS* with ``--network example-dns`` argument. 
 
-And then with example ``docker-compose.yml``:
+Next, with example ``docker-compose.yml``:
 
 .. sourcecode:: yaml
 
@@ -134,6 +134,6 @@ And then with example ``docker-compose.yml``:
    networks:
      dns:
        external: true
-       name: dns
+       name: example-dns
 
 you can start container that would be accessible by host as ``example.docker`` domain.
