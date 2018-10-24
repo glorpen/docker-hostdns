@@ -108,3 +108,32 @@ To secure secret key (the ``dns-key-secret`` option) you can:
 - setting env var ``DNS_KEY_SECRET_FILE`` to path of file with secret as its content
 
 Option ``--dns-key-secret -`` will be then automatically prepended and secret key piped to docker-hostdns process.
+
+Working with docker-compose
+===========================
+
+When using **docker-compose** for development you can create custom docker network and use it as
+domain names source.
+
+To do this, create docker network, eg.: ``docker network create dns`` 
+
+And then with example ``docker-compose.yml``:
+
+.. sourcecode:: yaml
+
+   version: '2.2'
+   services:
+     app:
+       image: example
+       labels:
+         pl.glorpen.hostname: example
+       networks:
+         default: ~
+         dns: ~
+   
+   networks:
+     dns:
+       external: true
+       name: dns
+
+you can start container that would be accessible by host as ``example.docker`` domain.
