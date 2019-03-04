@@ -99,6 +99,14 @@ For help try ``docker run --rm -it glorpen/hostdns:latest --help``.
 
 Remember to mount ``/run/docker.sock`` inside container.
 
+Docker Environment Variables
+============================
+
+- ``DNS_SERVER``:            IP address of DNS server which will be updated, defaults to 127.0.0.1
+- ``DNS_ZONE``:              DNS zone to update, defaults to "docker"
+- ``DNS_KEY_SECRET``:        DNS Server key secret for use when updating zone
+- ``DNS_KEY_SECRET_FILE``:   path of file with secret as its content
+
 Securing DNS secret key
 ***********************
 
