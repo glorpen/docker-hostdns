@@ -118,6 +118,7 @@ Docker environment variables
 - ``DNS_ZONE``:              DNS zone to update, defaults to "docker"
 - ``DNS_KEY_SECRET``:        DNS Server key secret for use when updating zone
 - ``DNS_KEY_SECRET_FILE``:   path of file with secret as its content
+- ``CLEAR_ON_EXIT``:         clear zone on exit
 
 Securing DNS secret key
 ***********************
