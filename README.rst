@@ -99,8 +99,20 @@ For help try ``docker run --rm -it glorpen/hostdns:latest --help``.
 
 Remember to mount ``/run/docker.sock`` inside container.
 
-Docker Environment Variables
-============================
+Build image from GitHub
+***********************
+
+- ``git clone <repo>``
+- ``cd docker-hostdns/``
+- ``python3 setup.py bdist_wheel``
+- ``docker build -t "<image name>" --build-arg HOSTDNS_VERSION=<version> .``
+
+* <version> ``2.1.0`` is the latest at the time of writing. The version is visible in the output of ``python3 setup.py bdist_wheel``, e.g.:
+
+``Copying src/docker_hostdns.egg-info to build/bdist.linux-x86_64/wheel/docker_hostdns-2.1.0-py3.4.egg-info``
+
+Docker environment variables
+****************************
 
 - ``DNS_SERVER``:            IP address of DNS server which will be updated, defaults to 127.0.0.1
 - ``DNS_ZONE``:              DNS zone to update, defaults to "docker"
