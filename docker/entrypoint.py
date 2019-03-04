@@ -10,7 +10,7 @@ import docker_hostdns.console as dconsole
 
 app_args = sys.argv[1:]
 
-if app_args[0][0] != "-":
+if len(sys.argv) > 1 and app_args[0][0] != "-":
 	os.execvp(app_args[0], app_args)
 
 pre_args = []
