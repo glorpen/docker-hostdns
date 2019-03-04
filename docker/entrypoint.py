@@ -10,7 +10,7 @@ import docker_hostdns.console as dconsole
 
 app_args = sys.argv[1:]
 
-if app_args[0][0] != "-":
+if len(sys.argv) > 1 and app_args[0][0] != "-":
 	os.execvp(app_args[0], app_args)
 
 pre_args = []
@@ -24,5 +24,17 @@ if key_secret is None:
 
 if key_secret:
 	pre_args.extend(["--dns-key-secret", key_secret])
+
+dns_zone = os.environ.get("DNS_ZONE")
+if dns_zone:
+        pre_args.extend(["--zone", dns_zone])
+
+dns_server = os.environ.get("DNS_SERVER")
+if dns_server:
+        pre_args.extend(["--dns-server", dns_server])
+
+clear_on_exit = os.environ.get("CLEAR_ON_EXIT")
+if clear_on_exit and clear_on_exit.lower() in ["true", "yes"]:
+	pre_args.extend(["--clear-on-exit"])
 
 dconsole.execute([sys.argv[0]] + pre_args + app_args)
