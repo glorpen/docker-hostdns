@@ -25,4 +25,12 @@ if key_secret is None:
 if key_secret:
 	pre_args.extend(["--dns-key-secret", key_secret])
 
+dns_zone = os.environ.get("DNS_ZONE")
+if dns_zone:
+        pre_args.extend(["--zone", dns_zone])
+
+dns_server = os.environ.get("DNS_SERVER")
+if dns_server:
+        pre_args.extend(["--dns-server", dns_server])
+
 dconsole.execute([sys.argv[0]] + pre_args + app_args)
