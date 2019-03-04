@@ -33,4 +33,8 @@ dns_server = os.environ.get("DNS_SERVER")
 if dns_server:
         pre_args.extend(["--dns-server", dns_server])
 
+clear_on_exit = os.environ.get("CLEAR_ON_EXIT")
+if clear_on_exit and clear_on_exit.lower() in ["true", "yes"]:
+	pre_args.extend(["--clear-on-exit"])
+
 dconsole.execute([sys.argv[0]] + pre_args + app_args)
