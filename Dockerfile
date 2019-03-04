@@ -10,4 +10,7 @@ ADD dist/docker_hostdns-${HOSTDNS_VERSION}-py3-none-any.whl /usr/local/share/
 RUN pip install /usr/local/share/docker_hostdns-${HOSTDNS_VERSION}-py3-none-any.whl \
     && rm -rf /root/.cache
 
+VOLUME ["/run/docker.sock"]
+
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint"]
+
