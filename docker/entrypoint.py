@@ -25,6 +25,10 @@ if key_secret is None:
 if key_secret:
 	pre_args.extend(["--dns-key-secret", key_secret])
 
+dns_key_name = os.environ.get("DNS_KEY_NAME")
+if dns_key_name:
+	pre_args.extend(["--dns-key-name", dns_key_name])
+
 dns_zone = os.environ.get("DNS_ZONE")
 if dns_zone:
         pre_args.extend(["--zone", dns_zone])
