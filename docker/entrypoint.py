@@ -37,6 +37,35 @@ dns_server = os.environ.get("DNS_SERVER")
 if dns_server:
         pre_args.extend(["--dns-server", dns_server])
 
+instance_name = os.environ.get("NAME")
+if instance_name:
+	pre_args.extend(["--name", instance_name])
+
+network = os.environ.get("NETWORK")
+if network:
+        net_list = [x.strip() for x in network.split(',')]
+        for network in net_list:
+                pre_args.extend(["--network", network])
+
+verbosity = os.environ.get("VERBOSITY")
+if verbosity:
+        try:
+                verb_int = int(verbosity)
+        except ValueError:
+                verb_int = None
+
+        if verb_int:
+                verbosity = '-'
+                count = 0
+                for count in range(min(verb_int, 3)):
+                        verbosity += 'v'
+                        count += 1
+                pre_args.extend([verbosity])
+
+syslog = os.environ.get("SYSLOG")
+if syslog and syslog.lower() in ["true", "yes"]:
+	pre_args.extend(["--syslog"])
+
 clear_on_exit = os.environ.get("CLEAR_ON_EXIT")
 if clear_on_exit and clear_on_exit.lower() in ["true", "yes"]:
 	pre_args.extend(["--clear-on-exit"])

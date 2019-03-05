@@ -119,6 +119,10 @@ Docker environment variables
 - ``DNS_KEY_NAME``:          DNS Server key name for use when updating zone
 - ``DNS_KEY_SECRET``:        DNS Server key secret for use when updating zone
 - ``DNS_KEY_SECRET_FILE``:   path of file with secret as its content
+- ``NAME``:		     name to differentiate between multiple instances inside same dns zone, defaults to current hostname
+- ``NETWORK``:		     network to fetch container names from, defaults to docker default bridge, accepts multiple networks as comma delimited list (e.g. ``network1,network2,network3,..``)
+- ``VERBOSITY``:	     give more output, accepts ``0`` to ``3``, defaults to ``0`` (equivalent to ``-v``, ``-vv``, ``-vvv`` arguments on the command line)
+- ``SYSLOG``:		     enable logging to syslog, defaults to ``false`` (accepts ``true`` or ``yes``)
 - ``CLEAR_ON_EXIT``:         clear zone on exit, defaults to ``false`` (accepts ``true`` or ``yes``)
 
 Securing DNS secret key
