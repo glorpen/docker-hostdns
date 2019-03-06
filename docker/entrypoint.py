@@ -55,12 +55,8 @@ if verbosity:
                 verb_int = None
 
         if verb_int:
-                verbosity = '-'
-                count = 0
                 for count in range(min(verb_int, 3)):
-                        verbosity += 'v'
-                        count += 1
-                pre_args.extend([verbosity])
+                        pre_args.extend(["-v"])
 
 syslog = os.environ.get("SYSLOG")
 if syslog and syslog.lower() in ["true", "yes"]:
