@@ -38,9 +38,7 @@ class PidWriter(object):
     def __exit__(self, *args):
         os.unlink(self.pidpath)
 
-def execute(argv = None):
-    if argv is None:
-        argv = sys.argv
+def parse_commandline(argv):
     
     p = argparse.ArgumentParser(
         prog="docker-hostdns" if argv[0].endswith(".py") else os.path.basename(argv[0]),
@@ -61,7 +59,10 @@ def execute(argv = None):
     p.add_argument('--clear-on-exit', default=False, action="store_true", help="clear zone on exit")
     
     conf = p.parse_args(args=argv[1:])
-    
+    conf.prog = p.prog
+    return conf
+
+def execute_with_configuration(conf):
     keyring = None
     
     if conf.dns_key_name and conf.dns_key_secret:
@@ -83,7 +84,7 @@ def execute(argv = None):
     
     if conf.syslog:
         h = SysLogHandler(facility=SysLogHandler.LOG_DAEMON, address='/dev/log')
-        formatter = logging.Formatter(p.prog+' [%(name)s] %(message)s', '%b %e %H:%M:%S')
+        formatter = logging.Formatter(conf.prog+' [%(name)s] %(message)s', '%b %e %H:%M:%S')
         h.setFormatter(formatter)
         handlers = [h]
     
@@ -114,3 +115,9 @@ def execute(argv = None):
             run()
     else:
         run()
+
+def execute(argv = None):
+    if argv is None:
+        argv = sys.argv
+    conf = parse_commandline(argv)
+    execute_with_configuration(conf)
