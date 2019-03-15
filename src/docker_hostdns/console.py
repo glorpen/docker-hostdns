@@ -3,7 +3,10 @@ Created on 31.03.2017
 
 @author: Arkadiusz Dzięgiel <arkadiusz.dziegiel@glorpen.pl>
 '''
+import os
 import sys
+import urllib
+import socket
 import signal
 import logging
 import argparse
@@ -11,7 +14,6 @@ from logging.handlers import SysLogHandler
 from docker_hostdns.hostdns import NamedUpdater, DockerHandler
 from docker_hostdns.exceptions import StopException, ConfigException
 import docker_hostdns
-import os
 
 try:
     import daemon
@@ -38,6 +40,58 @@ class PidWriter(object):
     def __exit__(self, *args):
         os.unlink(self.pidpath)
 
+class StoreWithDefaultAction(argparse.Action):
+    def __init__(self, default_on_empty, *args, **kwargs):
+        super(StoreWithDefaultAction, self).__init__(*args, nargs='?', **kwargs)
+        self.default_on_empty = default_on_empty
+    
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values is None:
+            values = self.default_on_empty
+        setattr(namespace, self.dest, values)
+
+class SyslogArguments(object):
+    port = None
+    socket = None
+    hostname = None
+    path = None
+    
+    def __init__(self, target):
+        super(SyslogArguments, self).__init__()
+        
+        self._parse_target(target)
+    
+    def _parse_target(self, target):
+        uri = urllib.parse.urlparse(target)
+        
+        schemes = {
+            "tcp": socket.SOCK_STREAM,
+            "udp": socket.SOCK_DGRAM,
+            "unix": None, # schema + path
+            "": None # only path was provided
+        }
+        
+        if uri.scheme not in schemes:
+            raise argparse.ArgumentTypeError("Unsupported scheme %r" % uri.scheme)
+        
+        self.socket = schemes[uri.scheme]
+        
+        if self.socket is not None:
+            self.port = int(uri.port) if uri.port else 514
+            self.hostname = uri.hostname
+        else:
+            self.path = uri.path
+    
+    def get_args(self):
+        if self.socket is None:
+            address = self.path
+        else:
+            address = (self.hostname, self.port)
+        return {
+            "address": address,
+            "socktype": self.socket
+        }
+    
 def parse_commandline(argv):
     
     p = argparse.ArgumentParser(
@@ -55,7 +109,12 @@ def parse_commandline(argv):
         p.add_argument('--daemonize', '-d', metavar="PIDFILE", action="store", default=None, help="daemonize after start and store PID at given path")
     
     p.add_argument('--verbose', '-v', default=0, action="count", help="give more output - option is additive, and can be used up to 3 times")
-    p.add_argument('--syslog', default=False, action="store_true", help="enable logging to syslog")
+    p.add_argument('--syslog',
+                   help="enable logging to syslog, defaults to \"/dev/log\", you can provide path to unix socket or uri: <tcp|udp|unix>://<path_or_host>[:<port>]",
+                   action=StoreWithDefaultAction,
+                   default_on_empty=SyslogArguments('/dev/log'),
+                   type=SyslogArguments
+                   )
     p.add_argument('--clear-on-exit', default=False, action="store_true", help="clear zone on exit")
     
     conf = p.parse_args(args=argv[1:])
@@ -83,7 +142,7 @@ def execute_with_configuration(conf):
     handlers = None
     
     if conf.syslog:
-        h = SysLogHandler(facility=SysLogHandler.LOG_DAEMON, address='/dev/log')
+        h = SysLogHandler(facility=SysLogHandler.LOG_DAEMON, **conf.syslog.get_args())
         formatter = logging.Formatter(conf.prog+' [%(name)s] %(message)s', '%b %e %H:%M:%S')
         h.setFormatter(formatter)
         handlers = [h]
