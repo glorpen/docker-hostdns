@@ -14,6 +14,9 @@ app_args = sys.argv[1:]
 if len(sys.argv) > 1 and app_args[0][0] != "-":
 	os.execvp(app_args[0], app_args)
 
+def as_bool(x):
+	return x.lower() in ["true", "yes", "1", "y"]
+
 env_conf = {}
 
 envs = [
@@ -31,7 +34,7 @@ envs = [
 			"SYSLOG": "syslog",
 			"CLEAR_ON_EXIT": "clear_on_exit"
 		},
-		lambda x: x.lower() in ["true", "yes", "1", "y"]
+		as_bool
 	),
 	(
 		{
@@ -65,6 +68,16 @@ if key_secret is None:
 
 if key_secret:
 	env_conf["dns_key_secret"] = key_secret
+
+syslog = os.environ.get("SYSLOG")
+if syslog:
+	if as_bool(syslog):
+		syslog = "/dev/log"
+else:
+	syslog = None
+
+if syslog:
+	env_conf["syslog"] = dconsole.SyslogArguments(syslog)
 
 conf = vars(dconsole.parse_commandline([sys.argv[0]] + app_args))
 conf.update(env_conf)
