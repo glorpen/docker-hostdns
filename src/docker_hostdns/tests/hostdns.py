@@ -8,7 +8,6 @@ from docker_hostdns.hostdns import NamedUpdater, ContainerInfo, DockerHandler
 import dns
 import contextlib
 from docker_hostdns.exceptions import ConnectionException
-import socket
 
 def _assert_called_once(mock):
     if hasattr(mock, "assert_called_once"):
@@ -238,4 +237,3 @@ class DockerHandlerTest(unittest.TestCase):
                         })
                         
                         on_disconnect.assert_called_once_with("test-id")
-        
