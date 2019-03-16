@@ -16,9 +16,9 @@ Usage
                          [--dns-key-name DNS_KEY_NAME] [--name NAME]
                          [--network NETWORK] [--daemonize PIDFILE] [--verbose]
                          [--syslog] [--clear-on-exit]
-   
+
    Update BIND nameserver zone with Docker hosts via DNS Updates.
-   
+
    optional arguments:
      -h, --help            show this help message and exit
      --zone ZONE           dns zone to update, defaults to "docker"
@@ -38,7 +38,7 @@ Usage
                            daemonize after start and store PID at given path
      --verbose, -v         give more output - option is additive, and can be used
                            up to 3 times
-     --syslog              enable logging to syslog
+     --syslog              enable logging to syslog, defaults to "/dev/log", you can provide path to unix socket or uri: <tcp|udp|unix>://<path_or_host>[:<port>]
      --clear-on-exit       clear zone on exit
 
 
@@ -49,7 +49,7 @@ Example ``named.conf`` zone configuration with key auth:
 .. sourcecode::
 
    include "/etc/bind/docker.key";
-   
+
    zone "docker" in {
        type master;
        file "/var/bind/dyn/docker.zone";
@@ -82,9 +82,9 @@ Following dns records are created for each container, given ``example`` hostname
 - IPv4: ``*.example.docker``
 - IPv6: ``example.docker``
 - IPv6: ``*.example.docker``
-- TXT: ``_container_<name>.docker`` with container name as value and instance name as ``<name>`` 
+- TXT: ``_container_<name>.docker`` with container name as value and instance name as ``<name>``
 
-TXT record is used for keeping track of added hosts so when app is stopped or resumed it keeps its state. 
+TXT record is used for keeping track of added hosts so when app is stopped or resumed it keeps its state.
 
 Custom host names
 *****************
@@ -119,10 +119,10 @@ Docker environment variables
 - ``DNS_KEY_NAME``:          DNS Server key name for use when updating zone
 - ``DNS_KEY_SECRET``:        DNS Server key secret for use when updating zone
 - ``DNS_KEY_SECRET_FILE``:   path of file with secret as its content
-- ``NAME``:		     name to differentiate between multiple instances inside same dns zone, defaults to current hostname
-- ``NETWORK``:		     network to fetch container names from, defaults to docker default bridge, accepts multiple networks as comma delimited list (e.g. ``network1,network2,network3,..``)
-- ``VERBOSITY``:	     give more output, accepts ``0`` to ``3``, defaults to ``0`` (equivalent to ``-v``, ``-vv``, ``-vvv`` arguments on the command line)
-- ``SYSLOG``:		     enable logging to syslog, defaults to ``false`` (accepts ``true`` or ``yes``)
+- ``NAME``:                  name to differentiate between multiple instances inside same dns zone, defaults to current hostname
+- ``NETWORK``:               network to fetch container names from, defaults to docker default bridge, accepts multiple networks as comma delimited list (e.g. ``network1,network2,network3,..``)
+- ``VERBOSITY``:             give more output, accepts ``0`` to ``3``, defaults to ``0`` (equivalent to ``-v``, ``-vv``, ``-vvv`` arguments on the command line)
+- ``SYSLOG``:                enable logging to syslog, if set ``true`` or ``yes`` defaults to "/dev/log", or you can provide path to unix socket or uri: ``<tcp|udp|unix>://<path_or_host>[:<port>]``
 - ``CLEAR_ON_EXIT``:         clear zone on exit, defaults to ``false`` (accepts ``true`` or ``yes``)
 
 Securing DNS secret key
@@ -141,7 +141,7 @@ Working with docker-compose
 When using *docker-compose* for development you can create custom docker network and use it as
 domain names source.
 
-To do this, create docker network with ``docker network create example-dns`` and then run *Docker HostDNS* with ``--network example-dns`` argument. 
+To do this, create docker network with ``docker network create example-dns`` and then run *Docker HostDNS* with ``--network example-dns`` argument.
 
 Next, with example ``docker-compose.yml``:
 
@@ -156,7 +156,7 @@ Next, with example ``docker-compose.yml``:
        networks:
          default: ~
          dns: ~
-   
+
    networks:
      dns:
        external: true
