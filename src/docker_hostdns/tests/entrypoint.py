@@ -24,7 +24,7 @@ class EntrypointTest(unittest.TestCase):
         try:
             runpy.run_path(self._entrypoint_path)
             
-            console_exec.assert_called_once()
+            self.assertEqual(len(console_exec.call_args_list), 1, 'Console executor was not called exactly once')
             ns = console_exec.call_args[0][0]
             yield ns
         finally:
