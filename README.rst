@@ -11,11 +11,11 @@ Usage
 
 .. sourcecode::
 
-   usage: docker-hostdns [-h] [--zone ZONE] [--dns-server DNS_SERVER]
-                         [--dns-key-secret DNS_KEY_SECRET]
-                         [--dns-key-name DNS_KEY_NAME] [--name NAME]
-                         [--network NETWORK] [--daemonize PIDFILE] [--verbose]
-                         [--syslog] [--clear-on-exit]
+   usage: docker-entrypoint [-h] [--zone ZONE] [--dns-server DNS_SERVER]
+                            [--dns-key-secret DNS_KEY_SECRET]
+                            [--dns-key-name DNS_KEY_NAME] [--name NAME]
+                            [--network NETWORK] [--verbose] [--syslog [SYSLOG]]
+                            [--clear-on-exit]
 
    Update BIND nameserver zone with Docker hosts via DNS Updates.
 
@@ -38,7 +38,9 @@ Usage
                            daemonize after start and store PID at given path
      --verbose, -v         give more output - option is additive, and can be used
                            up to 3 times
-     --syslog              enable logging to syslog, defaults to "/dev/log", you can provide path to unix socket or uri: <tcp|udp|unix>://<path_or_host>[:<port>]
+     --syslog [SYSLOG]     enable logging to syslog, defaults to "/dev/log", you
+                           can provide path to unix socket or uri:
+                           <tcp|udp|unix>://<path_or_host>[:<port>]
      --clear-on-exit       clear zone on exit
 
 
@@ -104,12 +106,7 @@ Build image from GitHub
 
 - ``git clone <repo>``
 - ``cd docker-hostdns/``
-- ``python3 setup.py bdist_wheel``
-- ``docker build -t "<image name>" --build-arg HOSTDNS_VERSION=<version> .``
-
-<version> ``2.2.0`` is the latest at the time of writing. The version is visible in the output of ``python3 setup.py bdist_wheel``, e.g:
-
-``Copying src/docker_hostdns.egg-info to build/bdist.linux-x86_64/wheel/docker_hostdns-2.1.0-py3.4.egg-info``
+- ``docker build -t "<image name>" .``
 
 Docker environment variables
 ****************************
