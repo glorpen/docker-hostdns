@@ -3,18 +3,38 @@ python:
   - '3.4'
   - '3.5'
   - '3.6'
+services:
+  - docker
 install:
   - pip install .
 script:
   - python setup.py test
+  - docker build -t glorpen/hostdns:dev ./
+  
+env:
+  global:
+    - DOCKER_USERNAME: glorpen
+    - secure: "fJ74wWaM4OZztorgyt5we86DSU1RnzWhTnZEbUSs812TidWq/aEOrTQmPD7gtwz8pJVOAx/DVIL0e45kQI/YF94ejlwS/vwoupVp/kL7jsCeNu8C2xNrq1LGO1syZQdsvmM3no2CVk8y8baIkkjrgF7yzW7d3LBdW/U8MP/NKgwdWtBg1BRFDgV2SRHI5shc0FjtO1BY8nqiBNLZ3g0wq22WT+RjTreGPEwHRbk4ytOkjPbiZKG4BYdcu2n1dGkfqy2Uoi2Ewt/Xo4DrUty75dELQXTJNqsmMwL+g1haRF4nqigHaP+hr+pc8TiF9p7/vOopBKq1IN7UXnNI0D2tqUS/6wcXpxfJEZxpq2/evvb/OIzOjyRtqXpwmHsqVKqvxO+JPfVfAv5oK2NTDFvbrsM8aRBC7ROwJdntrmNULtgzaUqb5pOe5+0HzhBg10/8hcJCC2ddMXvvWyvmi4BE7A4vteOidHnajtoIHqt0Nz6TKGK8ZZILiY7yv+z9b2E+Nh0zKd1IDs9gE26pKUCNYRTGlt90AgC6YS5OWiODvTs7DeWBL/qiBdCvubAkMHZBGGFF2HkA2eyaw0A2q1rEh/Y5J2STOub/Khptyxng3ODm3L4GV4SmByS/r+wRW6gN1mYpNjr8E1ZV7jphwaX9i3xQUxPGXIK5VxBb5ngBi30="
 deploy:
-  provider: pypi
-  user: glorpen
-  password:
-    secure: "JOE42a8vA60PDzqkVKgxNHOuPJ97saKsrxRt/YTU4tbMRQl86W5U0Ce5Kq5R2vM5jhAmat4naPFszyT5A8yGZ/1BZ3GeSzCh9EFAfgtp64AtAolc8m9bw2Q7bdSaNO93MGd7p6M3TJY/UcOywAdSDF4DR7dPwxAa4Sdjkx2R3eIiJm1gfc40tQDRx8L7GYJFOR2wg/BdXmDFT1LDtl6siGMbn1joE1mW/bmDPsCwfflrco3de/rjaZiBqP7F0MCCk8t2O91n+0yHFAr9Mw5t+WZzdSVJEsQZP877A37eIPdcR55/0k0YLoFf62Z2fjSp1JMHnCLSWgfGHRhMr8weoDK3JuRtFQKPrVWwtR218iS19UG/eN3WakgW6Ebkxofyd3FT9qSg79FoYBsRMc6ieFY0IpkiWox+tr621BGkdSroYz6a7afFW/dLRlKUU2FCqNmFhmaZXOLWpoYK3XA5Oz+tiOhySWixrzGuv+hvt2GOfyC7WzTqyb+OCGWK3z3Ftrv++8G3qtHzZmyrBbT6ElLfcuKzJuPuTlMtLuSqKSuGOqKEZAowAbw49JudDvVL1zSAB8tq59ee79acnGfaoqCjrT0+cuXZd/JsDTOD2KNZaVHrMdtvuWsM4JlIqtXYx3qangUeV2WPkjW68kaebCeZH/ULtzTK7ebXQAahwT8="
-  on:
-    tags: true
-    branch: master
-    python: '3.6'
-    condition: "$TRAVIS_TAG =~ ^v[0-9.]+$"
-  distributions: "sdist bdist_wheel"
+  - provider: pypi
+    user: glorpen
+    password:
+      secure: "JOE42a8vA60PDzqkVKgxNHOuPJ97saKsrxRt/YTU4tbMRQl86W5U0Ce5Kq5R2vM5jhAmat4naPFszyT5A8yGZ/1BZ3GeSzCh9EFAfgtp64AtAolc8m9bw2Q7bdSaNO93MGd7p6M3TJY/UcOywAdSDF4DR7dPwxAa4Sdjkx2R3eIiJm1gfc40tQDRx8L7GYJFOR2wg/BdXmDFT1LDtl6siGMbn1joE1mW/bmDPsCwfflrco3de/rjaZiBqP7F0MCCk8t2O91n+0yHFAr9Mw5t+WZzdSVJEsQZP877A37eIPdcR55/0k0YLoFf62Z2fjSp1JMHnCLSWgfGHRhMr8weoDK3JuRtFQKPrVWwtR218iS19UG/eN3WakgW6Ebkxofyd3FT9qSg79FoYBsRMc6ieFY0IpkiWox+tr621BGkdSroYz6a7afFW/dLRlKUU2FCqNmFhmaZXOLWpoYK3XA5Oz+tiOhySWixrzGuv+hvt2GOfyC7WzTqyb+OCGWK3z3Ftrv++8G3qtHzZmyrBbT6ElLfcuKzJuPuTlMtLuSqKSuGOqKEZAowAbw49JudDvVL1zSAB8tq59ee79acnGfaoqCjrT0+cuXZd/JsDTOD2KNZaVHrMdtvuWsM4JlIqtXYx3qangUeV2WPkjW68kaebCeZH/ULtzTK7ebXQAahwT8="
+    on:
+      tags: true
+      branch: master
+      python: '3.6'
+      condition: "$TRAVIS_TAG =~ ^v[0-9.]+$"
+    distributions: "sdist bdist_wheel"
+  - provider: script
+    on:
+      tags: true
+      branch: master
+      python: '3.6'
+      condition: "$TRAVIS_TAG =~ ^v[0-9.]+$"
+    script: 'set -e;
+             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
+             set -x;
+             docker tag glorpen/hostdns:dev glorpen/hostdns:latest;
+             docker tag glorpen/hostdns:dev "glorpen/hostdns:${TRAVIS_TAG/v/}";
+             docker push glorpen/hostdns:latest "glorpen/hostdns:${TRAVIS_TAG/v/}";'
