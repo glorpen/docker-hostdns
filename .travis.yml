@@ -37,4 +37,4 @@ deploy:
              set -x;
              docker tag glorpen/hostdns:dev glorpen/hostdns:latest;
              docker tag glorpen/hostdns:dev "glorpen/hostdns:${TRAVIS_TAG/v/}";
-             docker push glorpen/hostdns:latest "glorpen/hostdns:${TRAVIS_TAG/v/}";'
+             docker push glorpen/hostdns:latest; docker push "glorpen/hostdns:${TRAVIS_TAG/v/}";'
