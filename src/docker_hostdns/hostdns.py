@@ -26,7 +26,7 @@ class NamedUpdater(object):
     keyring = None
     keyalgorithm = None
     
-    def __init__(self, zone, dns_server, keyring=None, instance_name=None, keyalgorithm='hmac_md5'):
+    def __init__(self, zone, dns_server, keyring=None, instance_name=None, keyalgorithm=None):
         super(NamedUpdater, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         
@@ -48,6 +48,8 @@ class NamedUpdater(object):
         if keyring:
             self.keyring = dns.tsigkeyring.from_text(keyring)
         
+        if keyalgorithm is None:
+            keyalgorithm = 'hmac_md5'
         self.keyalgorithm = getattr(dns.tsig, keyalgorithm.upper())
     
     def load_records(self):
