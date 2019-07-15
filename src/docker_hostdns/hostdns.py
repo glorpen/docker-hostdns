@@ -10,6 +10,8 @@ import logging
 import socket
 import dns.query
 import dns.update
+import dns.tsig
+import dns.inet
 import dns.tsigkeyring
 from docker_hostdns.exceptions import ConnectionException, DnsException,\
     StopException
@@ -22,12 +24,17 @@ def _as_str(s):
 class NamedUpdater(object):
     
     keyring = None
+    keyalgorithm = None
     
-    def __init__(self, zone, dns_server, keyring=None, instance_name=None):
+    def __init__(self, zone, dns_server, keyring=None, instance_name=None, keyalgorithm='hmac_md5'):
         super(NamedUpdater, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         
         self.zone = zone
+        
+        # resolve dns server hostname
+        dns_server = socket.gethostbyname(dns_server)
+
         self.dns_server = dns_server
         self.hosts = set()
         
@@ -40,6 +47,8 @@ class NamedUpdater(object):
         
         if keyring:
             self.keyring = dns.tsigkeyring.from_text(keyring)
+        
+        self.keyalgorithm = getattr(dns.tsig, keyalgorithm.upper())
     
     def load_records(self):
         q = dns.message.make_query(self._dns_txt_record, dns.rdatatype.TXT)
@@ -80,7 +89,7 @@ class NamedUpdater(object):
             names = [names]
         
         self.logger.debug("Adding host %r", names)
-        update = dns.update.Update(self._dns_zone, keyring=self.keyring)
+        update = dns.update.Update(self._dns_zone, keyring=self.keyring, keyalgorithm=self.keyalgorithm)
         
         for host in names:
             if ipv4s or ipv6s:
@@ -115,7 +124,7 @@ class NamedUpdater(object):
         if isinstance(hosts, str):
             hosts = [hosts]
         
-        update = dns.update.Update(self._dns_zone, keyring=self.keyring)
+        update = dns.update.Update(self._dns_zone, keyring=self.keyring, keyalgorithm=self.keyalgorithm)
         
         for host in hosts:
             dns_name_single = dns.name.from_text(host, self._dns_zone)

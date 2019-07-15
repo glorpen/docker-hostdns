@@ -24,6 +24,7 @@ envs = [
 		{
 			"DNS_ZONE": "zone",
 			"DNS_KEY_NAME": "dns_key_name",
+			"DNS_KEY_ALGORITHM": "dns_key_alg",
 			"NAME": "name",
 			"DNS_SERVER": "dns_server"
 		},

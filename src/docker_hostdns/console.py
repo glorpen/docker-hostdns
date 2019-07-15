@@ -14,6 +14,7 @@ from logging.handlers import SysLogHandler
 from docker_hostdns.hostdns import NamedUpdater, DockerHandler
 from docker_hostdns.exceptions import StopException, ConfigException
 import docker_hostdns
+import dns.tsigkeyring
 
 try:
     import daemon
@@ -91,7 +92,7 @@ class SyslogArguments(object):
             "address": address,
             "socktype": self.socket
         }
-    
+
 def parse_commandline(argv):
     
     p = argparse.ArgumentParser(
@@ -102,6 +103,8 @@ def parse_commandline(argv):
     p.add_argument('--dns-server', default='127.0.0.1', action="store", help="address of DNS server which will be updated, defaults to 127.0.0.1")
     p.add_argument('--dns-key-secret', action="store", help="DNS Server key secret for use when updating zone, use '-' to read from stdin")
     p.add_argument('--dns-key-name', action="store", help="DNS Server key name for use when updating zone")
+    algorithms = [i.lower() for i in dir(dns.tsig) if i.startswith('HMAC_')]
+    p.add_argument('--dns-key-alg', action="store", help="DNS Server key algorithm for use when updating zone", choices=algorithms)
     p.add_argument('--name', action="store", help="name to differentiate between multiple instances inside same dns zone, defaults to current hostname")
     p.add_argument('--network', default=None, action="append", help="network to fetch container names from, defaults to docker default bridge, can be used multiple times")
     
@@ -149,7 +152,7 @@ def execute_with_configuration(conf):
     
     logging.basicConfig(level=levels[min(conf.verbose, len(levels)-1)], handlers=handlers)
     
-    dns_updater = NamedUpdater(conf.zone, conf.dns_server, keyring, conf.name)
+    dns_updater = NamedUpdater(conf.zone, conf.dns_server, keyring, conf.name, conf.dns_key_alg)
     d = DockerHandler(dns_updater)
     
     dns_updater.setup()
