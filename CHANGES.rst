@@ -1,3 +1,22 @@
+2.4.0
+=====
+
+- added dns server name resolving
+- added key algorithm parameter for update request signing
+
+2.3.0
+=====
+
+- configure travis
+- slim docker image
+- fixed and added more tests
+- added more environment variables
+
+2.2.0
+=====
+
+- added environment variables for docker image
+
 2.1.0
 =====
 

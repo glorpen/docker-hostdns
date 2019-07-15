@@ -13,9 +13,10 @@ Usage
 
    usage: docker-entrypoint [-h] [--zone ZONE] [--dns-server DNS_SERVER]
                             [--dns-key-secret DNS_KEY_SECRET]
-                            [--dns-key-name DNS_KEY_NAME] [--name NAME]
-                            [--network NETWORK] [--verbose] [--syslog [SYSLOG]]
-                            [--clear-on-exit]
+                            [--dns-key-name DNS_KEY_NAME]
+                            [--dns-key-alg {...}]
+                            [--name NAME] [--network NETWORK] [--verbose]
+                            [--syslog [SYSLOG]] [--clear-on-exit]
 
    Update BIND nameserver zone with Docker hosts via DNS Updates.
 
@@ -30,12 +31,12 @@ Usage
                            '-' to read from stdin
      --dns-key-name DNS_KEY_NAME
                            DNS Server key name for use when updating zone
+     --dns-key-alg {...}
+                           DNS Server key algorithm for use when updating zone
      --name NAME           name to differentiate between multiple instances
                            inside same dns zone, defaults to current hostname
      --network NETWORK     network to fetch container names from, defaults to
                            docker default bridge, can be used multiple times
-     --daemonize PIDFILE, -d PIDFILE
-                           daemonize after start and store PID at given path
      --verbose, -v         give more output - option is additive, and can be used
                            up to 3 times
      --syslog [SYSLOG]     enable logging to syslog, defaults to "/dev/log", you
@@ -111,7 +112,7 @@ Build image from GitHub
 Docker environment variables
 ****************************
 
-- ``DNS_SERVER``:            IP address of DNS server which will be updated, defaults to ``127.0.0.1``
+- ``DNS_SERVER``:            address of DNS server which will be updated, defaults to ``127.0.0.1``
 - ``DNS_ZONE``:              DNS zone to update, defaults to ``docker``
 - ``DNS_KEY_NAME``:          DNS Server key name for use when updating zone
 - ``DNS_KEY_SECRET``:        DNS Server key secret for use when updating zone
