@@ -47,7 +47,7 @@ class NamedUpdaterTest(unittest.TestCase):
         self.assertTrue(found, "%r %s dns record with value %r exists" % (name, dns.rdatatype.to_text(rtype), value))
     
     def create_obj(self):
-        return NamedUpdater("example-zone", "example-dns", instance_name="test")
+        return NamedUpdater("example-zone", "127.0.0.3", instance_name="test")
     
     def test_host_add(self):
         n = self.create_obj()
@@ -103,6 +103,13 @@ class NamedUpdaterTest(unittest.TestCase):
             n.load_records()
         
         self.assertTrue(n.hosts.issubset([self.hostname]))
+    
+    def test_dns_hostname_resolving(self):
+        ip_addr = "127.0.0.3"
+        with unittest.mock.patch("socket.gethostbyname") as f:
+            f.return_value = ip_addr
+            n = NamedUpdater("example-zone", "some-dns-server")
+            self.assertEqual(n.dns_server, ip_addr)
 
 class ContainerInfoTest(unittest.TestCase):
     
